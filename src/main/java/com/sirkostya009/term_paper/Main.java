@@ -1,4 +1,4 @@
-package com.junkstudios.coursejob;
+package com.sirkostya009.term_paper;
 
 import javafx.application.Application;
 import javafx.stage.Stage;

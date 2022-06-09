@@ -1,11 +1,10 @@
-package com.junkstudios.coursejob;
+package com.sirkostya009.term_paper;
 
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
-import static com.junkstudios.coursejob.MicroObject.*;
 
 public class MicroObjectCreator extends Stage {
     private static final String nigga = "Негр", slaver = "Рабовласник", merchant = "Работоргівець";
@@ -50,13 +49,13 @@ public class MicroObjectCreator extends Stage {
     public MicroObject makeMicroObject(World parent) {
         switch (microObjectLevel.getValue()) {
             case slaver -> {
-                return new Slaver(nameField.getText(), Double.parseDouble(scaleField.getText()), x, y, isActive.isSelected(), parent);
+                return new MicroObject.Slaver(nameField.getText(), Double.parseDouble(scaleField.getText()), x, y, isActive.isSelected(), parent);
             }
             case merchant -> {
-                return new Merchant(nameField.getText(), Double.parseDouble(scaleField.getText()), x, y, isActive.isSelected(), parent);
+                return new MicroObject.Merchant(nameField.getText(), Double.parseDouble(scaleField.getText()), x, y, isActive.isSelected(), parent);
             }
             case nigga -> {
-                return new Nigger(nameField.getText(), Double.parseDouble(scaleField.getText()), x, y, isActive.isSelected(), parent);
+                return new MicroObject.Nigger(nameField.getText(), Double.parseDouble(scaleField.getText()), x, y, isActive.isSelected(), parent);
             }
         }
 

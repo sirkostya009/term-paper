@@ -1,4 +1,4 @@
-package com.junkstudios.coursejob;
+package com.sirkostya009.term_paper;
 
 import javafx.scene.Group;
 import javafx.scene.Node;
@@ -14,8 +14,6 @@ import javafx.stage.Stage;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
-
-import static com.junkstudios.coursejob.MacroObject.*;
 
 public class World extends Stage { // UNIVERSAL OBJECT
     private final Group allObjects = new Group();
@@ -105,10 +103,10 @@ public class World extends Stage { // UNIVERSAL OBJECT
     private @NotNull ArrayList<MacroObject> makeMacroObjects() {
         ArrayList<MacroObject> macroObjects = new ArrayList<>(4);
 
-        var auctionHouse = new AuctionHouse(1,174,1130,this);
-        var hut1 = new NiggerHut(1,138,417,this);
-        var hut2 = new NiggerHut(.8,530,13,this);
-        var ship = new TradeShip(1,1351,1240,this);
+        var auctionHouse = new MacroObject.AuctionHouse(1,174,1130,this);
+        var hut1 = new MacroObject.NiggerHut(1,138,417,this);
+        var hut2 = new MacroObject.NiggerHut(.8,530,13,this);
+        var ship = new MacroObject.TradeShip(1,1351,1240,this);
 
         macroObjects.add(auctionHouse);
         macroObjects.add(hut1);

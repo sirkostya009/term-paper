@@ -1,4 +1,4 @@
-package com.junkstudios.coursejob;
+package com.sirkostya009.term_paper;
 
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;

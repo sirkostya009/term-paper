@@ -1,4 +1,4 @@
-package com.junkstudios.coursejob;
+package com.sirkostya009.term_paper;
 
 import javafx.geometry.Point2D;
 import javafx.scene.control.ContextMenu;
@@ -9,7 +9,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 
-import static com.junkstudios.coursejob.MicroObject.*;
+import static com.sirkostya009.term_paper.MicroObject.*;
 
 abstract public class MacroObject extends ImageView {
     ArrayList<MicroObject> objects = new ArrayList<>();

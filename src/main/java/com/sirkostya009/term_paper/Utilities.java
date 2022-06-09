@@ -1,4 +1,4 @@
-package com.junkstudios.coursejob;
+package com.sirkostya009.term_paper;
 
 import javafx.geometry.Pos;
 import javafx.scene.Node;
