@@ -9,8 +9,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 
-import static com.sirkostya009.term_paper.MicroObject.*;
-
 abstract public class MacroObject extends ImageView {
     ArrayList<MicroObject> objects = new ArrayList<>();
     World world;
@@ -112,13 +110,12 @@ abstract public class MacroObject extends ImageView {
         setLayoutX(getLayoutX() + x);
     }
 
-    protected void getNiggersOut(Slaver newMaster) {
+    protected void getNiggersOut(MicroObject.Slaver newMaster) {
         final double[] x = {getStartingPos().getX()};
         var y = getStartingPos().getY();
 
         objects.removeIf(object1 -> {
-            if (!(object1 instanceof Nigger)) return false;
-            final var nigger = (Nigger) object1;
+            if (!(object1 instanceof MicroObject.Nigger nigger)) return false;
             nigger.awaiting = false;
             nigger.objective = newMaster.objective;
             nigger.reachedObjective = false;
@@ -147,16 +144,14 @@ abstract public class MacroObject extends ImageView {
 
         @Override
         public void interactWith(MicroObject object) {
-            if (object instanceof Slaver) {
-                final var slaver = (Slaver) object;
+            if (object instanceof MicroObject.Slaver slaver) {
                 if (objects.isEmpty()) return;
-                slaver.objective = (slaver instanceof Merchant) ? world.getShip() : world.getHut();
+                slaver.objective = (slaver instanceof MicroObject.Merchant) ? world.getShip() : world.getHut();
                 slaver.reachedObjective = false;
                 slaver.awaiting = false;
                 getNiggersOut(slaver);
             }
-            else if (object instanceof Nigger) {
-                final var nigger = (Nigger) object;
+            else if (object instanceof MicroObject.Nigger nigger) {
                 objects.add(nigger);
                 nigger.world.removeMicro(nigger);
                 nigger.awaiting = true;
@@ -179,15 +174,13 @@ abstract public class MacroObject extends ImageView {
 
         @Override
         public void interactWith(MicroObject object) {
-            if (object instanceof Merchant) {
-                final var merchant = (Merchant) object;
+            if (object instanceof MicroObject.Merchant merchant) {
                 objects.add(merchant);
                 merchant.world.removeMicro(merchant);
                 merchant.reachedObjective = false;
                 merchant.objective = world.getAuctionHouse();
             }
-            else if (object instanceof Slaver) {
-                final var slaver = (Slaver) object;
+            else if (object instanceof MicroObject.Slaver slaver) {
                 if (objects.isEmpty()) return;
                 slaver.objective = world.getHut();
                 slaver.reachedObjective = false;
@@ -211,7 +204,7 @@ abstract public class MacroObject extends ImageView {
 
         @Override
         public void interactWith(MicroObject object) {
-            if (object instanceof Slaver) return;
+            if (object instanceof MicroObject.Slaver) return;
             objects.add(object);
             object.world.removeMicro(object);
         }

@@ -116,7 +116,6 @@ public abstract class MicroObject extends ImageView implements Comparable<MicroO
 
                 move(speed, 0);
             }
-            default -> { return; }
         }
 
         miniMapVersion.move((getLayoutX() - x) / Math.pow(MiniMap.divisor, 2),
@@ -205,14 +204,13 @@ public abstract class MicroObject extends ImageView implements Comparable<MicroO
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (o instanceof MicroObject object)
+            return id == object.id &&
+                   getScaleX() == object.getScaleX() &&
+                   text.getText().equals(object.text.getText()) &&
+                   Objects.equals(getTexture(), getTexture());
 
-        MicroObject that = (MicroObject) o;
-
-        if (Double.compare(that.scale, scale) != 0) return false;
-        if (!Objects.equals(name, that.name)) return false;
-        return text != null ? text.getText().equals(that.text.getText()) : that.text == null;
+        return false;
     }
 
     @Override
