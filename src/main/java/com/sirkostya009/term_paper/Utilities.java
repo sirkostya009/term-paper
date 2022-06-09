@@ -7,8 +7,6 @@ import javafx.scene.image.Image;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
 
@@ -17,20 +15,20 @@ public class Utilities {
     public static final Pos alignment = Pos.CENTER;
     public static final boolean fillWidth = false;
 
-    static @NotNull Button genericCreateButton() {
+    static Button genericCreateButton() {
         var res = new Button("Create");
         res.setDefaultButton(true);
         return res;
     }
 
-    static @NotNull Button genericCancelButton(@NotNull Stage stage) {
+    static Button genericCancelButton( Stage stage) {
         var res = new Button("Cancel");
         res.setCancelButton(true);
         res.setOnAction(actionEvent -> stage.close());
         return res;
     }
 
-    static @NotNull VBox genericVBox(Node... nodes) {
+    static VBox genericVBox(Node... nodes) {
         var res = new VBox(nodes);
         res.setFillWidth(fillWidth);
         res.setSpacing(spacing);
@@ -38,7 +36,7 @@ public class Utilities {
         return res;
     }
 
-    static @NotNull HBox genericHBox(Node... nodes) {
+    static HBox genericHBox(Node... nodes) {
         var res = new HBox(nodes);
         res.setAlignment(alignment);
         res.setSpacing(spacing);
@@ -46,8 +44,7 @@ public class Utilities {
         return res;
     }
 
-    @Contract("_ -> new")
-    static public @NotNull Image imageFrom(String name) {
+    static public Image imageFrom(String name) {
         return new Image(Objects.requireNonNull(MacroObject.class.getResourceAsStream(name + ".png")));
     }
 

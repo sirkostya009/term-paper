@@ -5,7 +5,6 @@ import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 
@@ -40,7 +39,7 @@ abstract public class MacroObject extends ImageView {
         );
     }
 
-    private @NotNull MenuItem interactWithSelected() {
+    private MenuItem interactWithSelected() {
         var res = new MenuItem("Interact with selected");
         res.setOnAction(actionEvent -> {
             var toInteract = new ArrayList<MicroObject>();
@@ -65,7 +64,7 @@ abstract public class MacroObject extends ImageView {
         world.miniMap.push(micro);
     }
 
-    private @NotNull MenuItem getAllMicrosOut() {
+    private MenuItem getAllMicrosOut() {
         var res = new MenuItem("Free all micros");
 
         res.setOnAction(actionEvent -> {

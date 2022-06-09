@@ -11,7 +11,6 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 
@@ -100,7 +99,7 @@ public class World extends Stage { // UNIVERSAL OBJECT
         show();
     }
 
-    private @NotNull ArrayList<MacroObject> makeMacroObjects() {
+    private ArrayList<MacroObject> makeMacroObjects() {
         ArrayList<MacroObject> macroObjects = new ArrayList<>(4);
 
         var auctionHouse = new MacroObject.AuctionHouse(1,174,1130,this);

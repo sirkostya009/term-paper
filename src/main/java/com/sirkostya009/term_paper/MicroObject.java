@@ -4,7 +4,6 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.text.Text;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -137,7 +136,7 @@ public abstract class MicroObject extends ImageView implements Comparable<MicroO
         text.setLayoutX(getLayoutX());
     }
 
-    public boolean isWithinRange(@NotNull MacroObject with) {
+    public boolean isWithinRange(MacroObject with) {
         return with.absoluteX() - absoluteX() <= getImage().getWidth()  * 2 &&
                with.absoluteY() - absoluteY() <= getImage().getHeight() * 2;
     }
@@ -198,7 +197,7 @@ public abstract class MicroObject extends ImageView implements Comparable<MicroO
     }
 
     @Override
-    public int compareTo(@NotNull MicroObject o) {
+    public int compareTo(MicroObject o) {
         return id - o.id;
     }
 

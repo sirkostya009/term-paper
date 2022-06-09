@@ -4,7 +4,6 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
-import org.jetbrains.annotations.NotNull;
 
 public class MiniMap {
     static final double divisor = 4.0;
@@ -13,7 +12,7 @@ public class MiniMap {
     public final ImageView view;
     public final Rectangle camera;
 
-    public MiniMap(@NotNull World parent) {
+    public MiniMap(World parent) {
         this.parent = parent;
 
         view = new ImageView(parent.view.getImage());
