@@ -6,8 +6,11 @@ import javafx.scene.control.Button;
 import javafx.scene.image.Image;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
+import java.io.File;
+import java.nio.file.Paths;
 import java.util.Objects;
 
 public class Utilities {
@@ -42,6 +45,18 @@ public class Utilities {
         res.setSpacing(spacing);
         res.setFillHeight(fillWidth);
         return res;
+    }
+
+    static FileChooser genericChooser() {
+        var chooser = new FileChooser();
+
+        chooser.setInitialDirectory(new File(Paths.get("").toAbsolutePath().toString()));
+        chooser.setInitialFileName("unnamed_state");
+        chooser.getExtensionFilters().addAll(
+                new FileChooser.ExtensionFilter("Data Files", "*.state", "*.dat", "*.bin")
+        );
+
+        return chooser;
     }
 
     static public Image imageFrom(String name) {

@@ -5,9 +5,12 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.text.Text;
 
+import javax.swing.text.StyledEditorKit;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Objects;
+import java.util.function.BiPredicate;
 
 public abstract class MicroObject extends ImageView implements Comparable<MicroObject>, Cloneable {
 
@@ -37,7 +40,7 @@ public abstract class MicroObject extends ImageView implements Comparable<MicroO
     static {}
     {}
 
-    protected MicroObject(String _name, double scale, int x, int y, boolean isActive, World parent, Image image) {
+    protected MicroObject(String _name, double scale, double x, double y, boolean isActive, World parent, Image image) {
         super(image);
         world = parent;
         name = _name;
@@ -239,11 +242,11 @@ public abstract class MicroObject extends ImageView implements Comparable<MicroO
 
         Slaver master = null;
 
-        protected Nigger(String _name, double scale, int x, int y, boolean isActive, World parent, Image image) {
+        protected Nigger(String _name, double scale, double x, double y, boolean isActive, World parent, Image image) {
             super(_name, scale, x, y, isActive, parent, image);
         }
 
-        public Nigger(String _name, double scale, int x, int y, boolean isActive, World parent) {
+        public Nigger(String _name, double scale, double x, double y, boolean isActive, World parent) {
             super(_name, scale, x, y, isActive, parent, Utilities.imageFrom(textureString));
         }
 
@@ -281,11 +284,11 @@ public abstract class MicroObject extends ImageView implements Comparable<MicroO
 
         ArrayList<Nigger> niggers = new ArrayList<>();
 
-        protected Slaver(String _name, double scale, int x, int y, boolean isActive, World parent, Image image) {
+        protected Slaver(String _name, double scale, double x, double y, boolean isActive, World parent, Image image) {
             super(_name, scale, x, y, isActive, parent, image);
         }
 
-        public Slaver(String _name, double scale, int x, int y, boolean isActive, World parent) {
+        public Slaver(String _name, double scale, double x, double y, boolean isActive, World parent) {
             super(_name, scale, x, y, isActive, parent, Utilities.imageFrom(textureString));
         }
 
@@ -319,7 +322,7 @@ public abstract class MicroObject extends ImageView implements Comparable<MicroO
     static class Merchant extends Slaver {
         static final String textureString = "купець";
 
-        public Merchant(String _name, double scale, int x, int y, boolean isActive, World parent) {
+        public Merchant(String _name, double scale, double x, double y, boolean isActive, World parent) {
             super(_name, scale, x, y, isActive, parent, Utilities.imageFrom(textureString));
         }
 
@@ -346,5 +349,36 @@ public abstract class MicroObject extends ImageView implements Comparable<MicroO
             return new Merchant(this);
         }
 
+    }
+
+    record MicroConfig(
+            String className,
+            String name,
+            double x, double y,
+            double scale,
+            Boolean isActive
+    ) implements Serializable {
+        public MicroObject convert(World parent) {
+            var x = parent.view.getX() + x();
+            var y = parent.view.getY() + y();
+
+            return switch (className) {
+                case "Nigger" -> new Nigger(name, scale, x, y, isActive, parent);
+                case "Slaver" -> new Slaver(name, scale, x, y, isActive, parent);
+                case "Merchant" -> new Merchant(name, scale, x, y, isActive, parent);
+                default -> null;
+            };
+        }
+    }
+
+    public MicroConfig convertToConfig() {
+        return new MicroConfig(
+                getClass().getSimpleName(),
+                name,
+                absoluteX(),
+                absoluteY(),
+                scale,
+                isActive
+        );
     }
 }

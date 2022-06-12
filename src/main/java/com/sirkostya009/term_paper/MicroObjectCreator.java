@@ -17,10 +17,11 @@ public class MicroObjectCreator extends Stage {
 
     private final ChoiceBox<String> microObjectLevel = new ChoiceBox<>();
 
-    int x, y;
+    double x, y;
 
-    public MicroObjectCreator(int x, int y) {
-        this.x = x; this.y = y;
+    public MicroObjectCreator(double x, double y) {
+        this.x = x;
+        this.y = y;
 
         microObjectLevel.getItems().addAll(nigga, slaver, merchant);
         microObjectLevel.setValue(nigga);
@@ -47,18 +48,11 @@ public class MicroObjectCreator extends Stage {
     }
 
     public MicroObject makeMicroObject(World parent) {
-        switch (microObjectLevel.getValue()) {
-            case slaver -> {
-                return new MicroObject.Slaver(nameField.getText(), Double.parseDouble(scaleField.getText()), x, y, isActive.isSelected(), parent);
-            }
-            case merchant -> {
-                return new MicroObject.Merchant(nameField.getText(), Double.parseDouble(scaleField.getText()), x, y, isActive.isSelected(), parent);
-            }
-            case nigga -> {
-                return new MicroObject.Nigger(nameField.getText(), Double.parseDouble(scaleField.getText()), x, y, isActive.isSelected(), parent);
-            }
-        }
-
-        return null;
+        return switch (microObjectLevel.getValue()) {
+            case slaver -> new MicroObject.Slaver(nameField.getText(), Double.parseDouble(scaleField.getText()), x, y, isActive.isSelected(), parent);
+            case merchant -> new MicroObject.Merchant(nameField.getText(), Double.parseDouble(scaleField.getText()), x, y, isActive.isSelected(), parent);
+            case nigga -> new MicroObject.Nigger(nameField.getText(), Double.parseDouble(scaleField.getText()), x, y, isActive.isSelected(), parent);
+            default -> null;
+        };
     }
 }

@@ -6,25 +6,22 @@ import javafx.scene.Scene;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
-import javafx.scene.input.MouseButton;
-import javafx.scene.input.MouseEvent;
+import javafx.scene.input.*;
 import javafx.stage.Stage;
 
+import java.io.*;
 import java.util.ArrayList;
 
 public class World extends Stage { // UNIVERSAL OBJECT
     private final Group allObjects = new Group();
-    public final ArrayList<MicroObject> microObjects = new ArrayList<>();
+    public ArrayList<MicroObject> microObjects = new ArrayList<>();
     public final ArrayList<MacroObject> macroObjects = makeMacroObjects();
-    public final int width, height;
+    public final double width, height;
 
     public final ImageView view;
     public final MiniMap miniMap;
 
     private boolean firstHut = true;
-
     private boolean isRunning = true;
 
     private record Runner(World world) implements Runnable {
@@ -43,7 +40,7 @@ public class World extends Stage { // UNIVERSAL OBJECT
 
     private Thread runner = new Thread(new Runner(this));
 
-    World(String title, int width, int height) {
+    World(String title, double width, double height) {
         view = new ImageView(Utilities.imageFrom("універсалич"));
         addChildren(view);
         addEventHandler(MouseEvent.MOUSE_CLICKED, mouseEvent -> {
@@ -121,9 +118,8 @@ public class World extends Stage { // UNIVERSAL OBJECT
     }
 
     public MacroObject getHut() {
-        if (firstHut = !firstHut)
-            return macroObjects.get(1);
-        return macroObjects.get(2);
+        firstHut = !firstHut;
+        return (firstHut) ? macroObjects.get(1) : macroObjects.get(2);
     }
 
     public MacroObject getShip() {
@@ -170,15 +166,81 @@ public class World extends Stage { // UNIVERSAL OBJECT
         allObjects.getChildren().removeAll(nodes);
     }
 
-    ContextMenu menu(int x, int y) {
+    ContextMenu menu(double x, double y) {
         return new ContextMenu(
                 newMicroObject(x, y),
                 interactObjects(),
+                saveState(),
+                loadState(),
                 deleteSelected()
         );
     }
 
-    public void makeNewMicroObject(int x, int y) {
+    private MenuItem loadState() {
+        var result = new MenuItem("Load state");
+
+        result.setOnAction(event -> {
+            var chooser = Utilities.genericChooser();
+            chooser.setTitle("Load state...");
+
+            try {
+                loadFromFile(chooser.showOpenDialog(this));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+
+        return result;
+    }
+
+    private void loadFromFile(File file) throws Exception {
+        if (file == null) return;
+
+        var input = new ObjectInputStream(new FileInputStream(file));
+
+        microObjects.forEach(this::removeMicro);
+        microObjects.clear();
+
+        var configs = (ArrayList<MicroObject.MicroConfig>) input.readObject();
+
+        configs.forEach(microConfig -> {
+            var micro = microConfig.convert(this);
+            miniMap.push(micro);
+            microObjects.add(micro);
+        });
+        microObjects.forEach(microObject -> addChildren(microObject, microObject.text, microObject.miniMapVersion));
+    }
+
+    private MenuItem saveState() {
+        var result = new MenuItem("Save state");
+
+        result.setOnAction(event -> {
+            var chooser = Utilities.genericChooser();
+            chooser.setTitle("Save state...");
+
+            try {
+                saveToFile(chooser.showSaveDialog(this));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+
+        return result;
+    }
+
+    private void saveToFile(File file) throws Exception {
+        if (file == null) return;
+
+        var output = new ObjectOutputStream(new FileOutputStream(file));
+
+        var configs = new ArrayList<MicroObject.MicroConfig>(microObjects.size());
+
+        microObjects.forEach(microObject -> configs.add(microObject.convertToConfig()));
+
+        output.writeObject(configs);
+    }
+
+    public void makeNewMicroObject(double x, double y) {
         var creator = new MicroObjectCreator(x, y);
         creator.setCreateAction(actionEvent -> {
             var object = creator.makeMicroObject(this);
@@ -217,17 +279,15 @@ public class World extends Stage { // UNIVERSAL OBJECT
     private MenuItem interactObjects() {
         var item = new MenuItem("Interact selected");
 
-        item.setOnAction(actionEvent -> {
-            microObjects.forEach(microObject -> {
-                if (microObject.isWithinRange(microObject.objective))
-                    microObject.objective.interactWith(microObject);
-            });
-        });
+        item.setOnAction(actionEvent -> microObjects.forEach(microObject -> {
+            if (microObject.isWithinRange(microObject.objective))
+                microObject.objective.interactWith(microObject);
+        }));
 
         return item;
     }
 
-    MenuItem newMicroObject(int x, int y) {
+    MenuItem newMicroObject(double x, double y) {
         var res = new MenuItem("New MicroObject here...");
 
         res.setOnAction(actionEvent -> makeNewMicroObject(x, y));
