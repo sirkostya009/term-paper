@@ -1,4 +1,4 @@
-package com.sirkostya009.term_paper;
+package com.sirkostya009.termpaper;
 
 import javafx.geometry.Point2D;
 import javafx.scene.control.ContextMenu;
@@ -9,8 +9,8 @@ import javafx.scene.image.ImageView;
 import java.util.ArrayList;
 
 abstract public class MacroObject extends ImageView {
-    ArrayList<MicroObject> objects = new ArrayList<>();
-    World world;
+    public final ArrayList<MicroObject> objects = new ArrayList<>();
+    public final World world;
 
     protected MacroObject(double scale, int posX, int posY, World parent, Image texture) {
         super(texture);
@@ -21,6 +21,72 @@ abstract public class MacroObject extends ImageView {
 
         setLayoutX(posX);
         setLayoutY(posY);
+
+        setOnMouseClicked(mouseEvent -> menu(mouseEvent.getSceneX(), mouseEvent.getSceneY()).show(world.getWindow(), mouseEvent.getScreenX(), mouseEvent.getScreenY()));
+    }
+
+    public static class AuctionHouse extends MacroObject {
+        public AuctionHouse(double scale, int posX, int posY, World world) {
+            super(scale, posX, posY, world, Utilities.imageFrom("хата"));
+        }
+
+        @Override
+        public void interactWith(MicroObject object) {
+            if (object instanceof MicroObject.Slaver slaver) {
+                if (objects.isEmpty()) return;
+                slaver.objective = (slaver instanceof MicroObject.Merchant) ? world.getShip() : world.getHut();
+                slaver.reachedObjective = false;
+                slaver.awaiting = false;
+                getNiggersOut(slaver);
+            }
+            else if (object instanceof MicroObject.Nigger nigger) {
+                objects.add(nigger);
+                nigger.world.removeMicro(nigger);
+                nigger.awaiting = true;
+                nigger.objective = null;
+            }
+        }
+    }
+
+    public static class TradeShip extends MacroObject {
+        public TradeShip(double scale, int posX, int posY, World world) {
+            super(scale, posX, posY, world, Utilities.imageFrom("корабель"));
+        }
+
+        @Override
+        public void interactWith(MicroObject object) {
+            if (object instanceof MicroObject.Merchant merchant) {
+                objects.add(merchant);
+                merchant.world.removeMicro(merchant);
+                merchant.reachedObjective = false;
+                merchant.objective = world.getAuctionHouse();
+            }
+            else if (object instanceof MicroObject.Slaver slaver) {
+                if (objects.isEmpty()) return;
+                slaver.objective = world.getHut();
+                slaver.reachedObjective = false;
+                slaver.awaiting = false;
+                getNiggersOut(slaver);
+            }
+        }
+
+        @Override
+        public Point2D getStartingPos() {
+            return new Point2D(getLayoutX() - 30,getLayoutY() - 40);
+        }
+    }
+
+    public static class NiggerHut extends MacroObject {
+        public NiggerHut(double scale, int posX, int posY, World world) {
+            super(scale, posX, posY, world, Utilities.imageFrom("халупа"));
+        }
+
+        @Override
+        public void interactWith(MicroObject object) {
+            if (object instanceof MicroObject.Slaver) return;
+            objects.add(object);
+            object.world.removeMicro(object);
+        }
     }
 
     @Override
@@ -31,7 +97,7 @@ abstract public class MacroObject extends ImageView {
         return x >= getLayoutX() && x <= getLayoutX() + width && y >= getLayoutY() && y <= getLayoutY() + height;
     }
 
-    ContextMenu menu(int x, int y) {
+    ContextMenu menu(double x, double y) {
         return new ContextMenu(
                    newMicroObject(x, y),
                    getAllMicrosOut(),
@@ -52,7 +118,7 @@ abstract public class MacroObject extends ImageView {
         return res;
     }
 
-    void freeMicro(MicroObject micro, double x, double y) {
+    private void freeMicro(MicroObject micro, double x, double y) {
         micro.setLayoutX(x);
         micro.setLayoutY(y);
 
@@ -80,7 +146,7 @@ abstract public class MacroObject extends ImageView {
         return res;
     }
 
-    MenuItem newMicroObject(int x, int y) {
+    private MenuItem newMicroObject(double x, double y) {
         var res = new MenuItem("New MicroObject here...");
 
         res.setOnAction(actionEvent -> {
@@ -135,79 +201,8 @@ abstract public class MacroObject extends ImageView {
         return Math.abs(world.view.getY() - getLayoutY());
     }
 
-    static class AuctionHouse extends MacroObject {
-
-        public AuctionHouse(double scale, int posX, int posY, World world) {
-            super(scale, posX, posY, world, Utilities.imageFrom("хата"));
-        }
-
-        @Override
-        public void interactWith(MicroObject object) {
-            if (object instanceof MicroObject.Slaver slaver) {
-                if (objects.isEmpty()) return;
-                slaver.objective = (slaver instanceof MicroObject.Merchant) ? world.getShip() : world.getHut();
-                slaver.reachedObjective = false;
-                slaver.awaiting = false;
-                getNiggersOut(slaver);
-            }
-            else if (object instanceof MicroObject.Nigger nigger) {
-                objects.add(nigger);
-                nigger.world.removeMicro(nigger);
-                nigger.awaiting = true;
-                nigger.objective = null;
-            }
-        }
-
-    }
-
     @Override
     public String toString() {
         return getClass().getSimpleName();
     }
-
-    static class TradeShip extends MacroObject {
-
-        public TradeShip(double scale, int posX, int posY, World world) {
-            super(scale, posX, posY, world, Utilities.imageFrom("корабель"));
-        }
-
-        @Override
-        public void interactWith(MicroObject object) {
-            if (object instanceof MicroObject.Merchant merchant) {
-                objects.add(merchant);
-                merchant.world.removeMicro(merchant);
-                merchant.reachedObjective = false;
-                merchant.objective = world.getAuctionHouse();
-            }
-            else if (object instanceof MicroObject.Slaver slaver) {
-                if (objects.isEmpty()) return;
-                slaver.objective = world.getHut();
-                slaver.reachedObjective = false;
-                slaver.awaiting = false;
-                getNiggersOut(slaver);
-            }
-        }
-
-        @Override
-        public Point2D getStartingPos() {
-            return new Point2D(getLayoutX() - 30,getLayoutY() - 40);
-        }
-
-    }
-
-    static class NiggerHut extends MacroObject {
-
-        public NiggerHut(double scale, int posX, int posY, World world) {
-            super(scale, posX, posY, world, Utilities.imageFrom("халупа"));
-        }
-
-        @Override
-        public void interactWith(MicroObject object) {
-            if (object instanceof MicroObject.Slaver) return;
-            objects.add(object);
-            object.world.removeMicro(object);
-        }
-
-    }
-
 }

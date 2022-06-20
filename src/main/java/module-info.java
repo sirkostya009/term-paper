@@ -7,6 +7,6 @@ module com.junkstudios.coursejob {
     requires kotlin.stdlib;
     requires java.desktop;
 
-    opens com.sirkostya009.term_paper to javafx.fxml;
-    exports com.sirkostya009.term_paper;
+    opens com.sirkostya009.termpaper to javafx.fxml;
+    exports com.sirkostya009.termpaper;
 }

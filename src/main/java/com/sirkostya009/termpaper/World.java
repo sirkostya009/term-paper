@@ -1,4 +1,4 @@
-package com.sirkostya009.term_paper;
+package com.sirkostya009.termpaper;
 
 import javafx.scene.Group;
 import javafx.scene.Node;
@@ -7,16 +7,14 @@ import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.*;
-import javafx.stage.Stage;
 
 import java.io.*;
 import java.util.ArrayList;
 
-public class World extends Stage { // UNIVERSAL OBJECT
-    private final Group allObjects = new Group();
-    public ArrayList<MicroObject> microObjects = new ArrayList<>();
-    public final ArrayList<MacroObject> macroObjects = makeMacroObjects();
-    public final double width, height;
+public class World extends Scene { // UNIVERSAL OBJECT
+    private final Group allObjects;
+    public final ArrayList<MicroObject> microObjects = new ArrayList<>();
+    public final ArrayList<MacroObject> macroObjects;
 
     public final ImageView view;
     public final MiniMap miniMap;
@@ -24,7 +22,7 @@ public class World extends Stage { // UNIVERSAL OBJECT
     private boolean firstHut = true;
     private boolean isRunning = true;
 
-    private record Runner(World world) implements Runnable {
+    private record Runner(ArrayList<MicroObject> microObjects) implements Runnable {
         @Override
         public void run() {
             while (true) {
@@ -33,67 +31,66 @@ public class World extends Stage { // UNIVERSAL OBJECT
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-                world.microObjects.forEach(MicroObject::doBusiness);
+                microObjects.forEach(MicroObject::doBusiness);
             }
         }
     }
 
-    private Thread runner = new Thread(new Runner(this));
+    private Thread runner = new Thread(new Runner(microObjects));
 
-    World(String title, double width, double height) {
+    public void toggleRunner() {
+        if (isRunning) {
+            System.out.println("Running loop...");
+            runner.setDaemon(true);
+            runner.start();
+        } else {
+            System.out.println("Stopping loop...");
+            runner.stop();
+            runner = new Thread(new Runner(microObjects));
+        }
+        isRunning = !isRunning;
+    }
+
+    World(double width, double height) {
+        super(new Group(), width, height);
+        allObjects = (Group) getRoot();
+
         view = new ImageView(Utilities.imageFrom("універсалич"));
         addChildren(view);
-        addEventHandler(MouseEvent.MOUSE_CLICKED, mouseEvent -> {
+        macroObjects = makeMacroObjects();
+
+        view.setOnMouseClicked(mouseEvent -> {
             var x = mouseEvent.getSceneX();
             var y = mouseEvent.getSceneY();
 
             if (mouseEvent.getButton() == MouseButton.SECONDARY) {
                 for (var macro : macroObjects)
                     if (macro.contains(x, y)) {
-                        macro.menu((int)x, (int)y).show(this, mouseEvent.getScreenX(), mouseEvent.getScreenY());
+                        macro.getOnMouseClicked().handle(mouseEvent);
                         return;
                     }
 
-                menu((int)x, (int)y).show(this, mouseEvent.getScreenX(), mouseEvent.getScreenY());
+                menu(x, y).show(getWindow(), mouseEvent.getScreenX(), mouseEvent.getScreenY());
             }
-            else if (mouseEvent.getButton() == MouseButton.PRIMARY) {
-                microObjects.forEach(microObject -> {
-                    if (microObject.contains(x, y))
-                        microObject.clickAction();
-                });
-            }
+            else if (mouseEvent.getButton() == MouseButton.PRIMARY)
+                for (var micro : microObjects)
+                    if (micro.contains(x, y))
+                        micro.clickAction();
         });
 
-        addEventFilter(KeyEvent.KEY_PRESSED, keyEvent -> {
+        setOnKeyPressed(keyEvent -> {
             switch (keyEvent.getCode()) {
                 case DELETE -> delete();
                 case INSERT -> makeNewMicroObject(width / 2,height / 2);
                 case ESCAPE -> microObjects.forEach(MicroObject::deselect);
                 case W,A,S,D-> microObjects.forEach(microObject -> microObject.move(keyEvent.getCode()));
                 case DOWN, LEFT, RIGHT, UP -> moveCamera(keyEvent.getCode());
-                case F -> {
-                    if (isRunning) {
-                        System.out.println("Running loop...");
-                        runner.setDaemon(true);
-                        runner.start();
-                    } else {
-                        System.out.println("Stopping loop...");
-                        runner.stop();
-                        runner = new Thread(new Runner(this));
-                    }
-                    isRunning = !isRunning;
-                }
+                case F -> toggleRunner();
                 case P -> System.out.println(microObjects);
             }
         });
 
-        this.width = width;
-        this.height = height;
-        setScene(new Scene(allObjects, width, height));
-        setResizable(false);
-        setTitle(title);
         miniMap = new MiniMap(this);
-        show();
     }
 
     private ArrayList<MacroObject> makeMacroObjects() {
@@ -136,8 +133,8 @@ public class World extends Stage { // UNIVERSAL OBJECT
             case LEFT -> x =  5;
         }
 
-        if (view.getY() + y > 0 || view.getY() + y < -(view.getImage().getHeight() - height)) return;
-        if (view.getX() + x > 0 || view.getX() + x < -(view.getImage().getWidth()  - width))  return;
+        if (view.getY() + y > 0 || view.getY() + y < -(view.getImage().getHeight() - getHeight())) return;
+        if (view.getX() + x > 0 || view.getX() + x < -(view.getImage().getWidth()  - getWidth()))  return;
 
         actualCameraMove(x, y);
         miniMap.updateCamera(x, y);
@@ -184,7 +181,7 @@ public class World extends Stage { // UNIVERSAL OBJECT
             chooser.setTitle("Load state...");
 
             try {
-                loadFromFile(chooser.showOpenDialog(this));
+                loadFromFile(chooser.showOpenDialog(getWindow()));
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -219,7 +216,7 @@ public class World extends Stage { // UNIVERSAL OBJECT
             chooser.setTitle("Save state...");
 
             try {
-                saveToFile(chooser.showSaveDialog(this));
+                saveToFile(chooser.showSaveDialog(getWindow()));
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -254,13 +251,12 @@ public class World extends Stage { // UNIVERSAL OBJECT
     }
 
     private void delete() {
-        var toDelete = new ArrayList<MicroObject>();
+        microObjects.removeIf(microObject -> {
+            if (microObject.isActive)
+                removeChildren(microObject, microObject.text, microObject.miniMapVersion);
 
-        for (var micro : microObjects)
-            if (micro.isActive)
-                toDelete.add(micro);
-
-        toDelete.forEach(this::removeMicro);
+            return microObject.isActive;
+        });
     }
 
     public void removeMicro(MicroObject object) {

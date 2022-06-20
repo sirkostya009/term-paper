@@ -1,4 +1,4 @@
-package com.sirkostya009.term_paper;
+package com.sirkostya009.termpaper;
 
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -17,7 +17,7 @@ public class MicroObjectCreator extends Stage {
 
     private final ChoiceBox<String> microObjectLevel = new ChoiceBox<>();
 
-    double x, y;
+    final double x, y;
 
     public MicroObjectCreator(double x, double y) {
         this.x = x;
@@ -48,10 +48,14 @@ public class MicroObjectCreator extends Stage {
     }
 
     public MicroObject makeMicroObject(World parent) {
+        var name = nameField.getText();
+        var scale = Double.parseDouble(scaleField.getText());
+        var active = isActive.isSelected();
+
         return switch (microObjectLevel.getValue()) {
-            case slaver -> new MicroObject.Slaver(nameField.getText(), Double.parseDouble(scaleField.getText()), x, y, isActive.isSelected(), parent);
-            case merchant -> new MicroObject.Merchant(nameField.getText(), Double.parseDouble(scaleField.getText()), x, y, isActive.isSelected(), parent);
-            case nigga -> new MicroObject.Nigger(nameField.getText(), Double.parseDouble(scaleField.getText()), x, y, isActive.isSelected(), parent);
+            case slaver -> new MicroObject.Slaver(name, scale, x, y, active, parent);
+            case merchant -> new MicroObject.Merchant(name, scale, x, y, active, parent);
+            case nigga -> new MicroObject.Nigger(name, scale, x, y, active, parent);
             default -> null;
         };
     }

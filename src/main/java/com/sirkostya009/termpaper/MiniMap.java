@@ -1,12 +1,11 @@
-package com.sirkostya009.term_paper;
+package com.sirkostya009.termpaper;
 
 import javafx.scene.image.ImageView;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 
 public class MiniMap {
-    static final double divisor = 4.0;
+    public final static double divisor = 4.0 * 2.75;
 
     public final World parent;
     public final ImageView view;
@@ -17,22 +16,22 @@ public class MiniMap {
 
         view = new ImageView(parent.view.getImage());
 
-        view.setFitHeight(parent.height / divisor);
-        view.setFitWidth(parent.width / divisor);
+        view.setFitHeight(parent.view.getImage().getHeight() / divisor);
+        view.setFitWidth(parent.view.getImage().getWidth() / divisor);
 
-        camera = new Rectangle(view.getFitWidth() / divisor, view.getFitHeight() / divisor);
+        camera = new Rectangle(parent.getWidth() / divisor, parent.getHeight() / divisor);
         camera.setFill(new Color(1, 1, 1, .3));
 
-        view.addEventFilter(MouseEvent.MOUSE_CLICKED, mouseEvent -> {
+        view.setOnMouseClicked(mouseEvent -> {
             var x = (mouseEvent.getSceneX() /
                     view.getFitWidth() *
                     parent.view.getImage().getWidth()) -
-                    parent.width / 2;
+                    parent.getWidth() / 2;
 
             var y = (mouseEvent.getSceneY() /
                     view.getFitHeight() *
                     parent.view.getImage().getHeight()) -
-                    parent.height / 2;
+                    parent.getHeight() / 2;
 
             parent.setPos(x, y);
 
@@ -47,14 +46,14 @@ public class MiniMap {
     }
 
     public void updateCamera(double x, double y) {
-        camera.setLayoutX(camera.getLayoutX() - x / Math.pow(divisor, 2));
-        camera.setLayoutY(camera.getLayoutY() - y / Math.pow(divisor, 2));
+        camera.setLayoutX(camera.getLayoutX() - x / divisor);
+        camera.setLayoutY(camera.getLayoutY() - y / divisor);
     }
 
     public void push(MicroObject microObject) {
         var object = microObject.clone();
-        object.setScaleX(microObject.getScaleX() / divisor);
-        object.setScaleY(microObject.getScaleY() / divisor);
+        object.setScaleX(microObject.getScaleX() / (divisor / 2));
+        object.setScaleY(microObject.getScaleY() / (divisor / 2));
         object.setLayoutX((microObject.getLayoutX() - parent.view.getX()) /
                 parent.view.getImage().getWidth() * view.getFitWidth() - object.getImage().getWidth() / 2);
         object.setLayoutY((microObject.getLayoutY() - parent.view.getY()) /

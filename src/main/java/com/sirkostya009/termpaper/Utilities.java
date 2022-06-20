@@ -1,4 +1,4 @@
-package com.sirkostya009.term_paper;
+package com.sirkostya009.termpaper;
 
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -18,20 +18,20 @@ public class Utilities {
     public static final Pos alignment = Pos.CENTER;
     public static final boolean fillWidth = false;
 
-    static Button genericCreateButton() {
+    public static Button genericCreateButton() {
         var res = new Button("Create");
         res.setDefaultButton(true);
         return res;
     }
 
-    static Button genericCancelButton( Stage stage) {
+    public static Button genericCancelButton( Stage stage) {
         var res = new Button("Cancel");
         res.setCancelButton(true);
         res.setOnAction(actionEvent -> stage.close());
         return res;
     }
 
-    static VBox genericVBox(Node... nodes) {
+    public static VBox genericVBox(Node... nodes) {
         var res = new VBox(nodes);
         res.setFillWidth(fillWidth);
         res.setSpacing(spacing);
@@ -39,7 +39,7 @@ public class Utilities {
         return res;
     }
 
-    static HBox genericHBox(Node... nodes) {
+    public static HBox genericHBox(Node... nodes) {
         var res = new HBox(nodes);
         res.setAlignment(alignment);
         res.setSpacing(spacing);
