@@ -5,7 +5,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 
 public class MiniMap {
-    public final static double divisor = 4.0 * 2.75;
+    public final static double divisor = 11;
 
     public final World parent;
     public final ImageView view;

@@ -47,7 +47,7 @@ public class Utilities {
         return res;
     }
 
-    static FileChooser genericChooser() {
+    public static FileChooser genericChooser() {
         var chooser = new FileChooser();
 
         chooser.setInitialDirectory(new File(Paths.get("").toAbsolutePath().toString()));
