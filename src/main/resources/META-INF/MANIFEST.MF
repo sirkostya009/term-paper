@@ -1,0 +1,9 @@
+Manifest-Version: 1.0
+Main-Class: com.sirkostya009.termpaper.Main
+Class-Path: annotations-23.0.0.jar javafx-fxml-17.0.1-win.jar kotlin-std
+ lib-1.6.21.jar javafx-controls-17.0.1-win.jar javafx-base-17.0.1.jar ko
+ tlin-stdlib-jdk8-1.6.21.jar javafx-fxml-17.0.1.jar controlsfx-11.1.0.ja
+ r kotlin-stdlib-common-1.6.21.jar kotlin-stdlib-jdk7-1.6.21.jar javafx-
+ controls-17.0.1.jar javafx-graphics-17.0.1.jar javafx-graphics-17.0.1-w
+ in.jar javafx-base-17.0.1-win.jar
+

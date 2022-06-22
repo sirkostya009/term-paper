@@ -28,32 +28,26 @@ public abstract class MicroObject extends ImageView implements Cloneable {
     protected MacroObject objective = null;
 
     public static class Nigger extends MicroObject {
-        static final String textureString = "негр";
-
         Slaver master = null;
 
-        protected Nigger(String _name, double scale, double x, double y, boolean isActive, World parent, Image image) {
-            super(_name, scale, x, y, isActive, parent, image);
-        }
-
         public Nigger(String _name, double scale, double x, double y, boolean isActive, World parent) {
-            this(_name, scale, x, y, isActive, parent, Utilities.imageFrom(textureString));
+            super(_name, scale, x, y, isActive, parent);
         }
 
-        public Nigger(Nigger nigger) {
+        private Nigger(Nigger nigger) {
             this(nigger.name, nigger.getScaleX(), nigger.getLayoutX(), nigger.getLayoutY(), nigger.isActive, nigger.world);
             master = nigger.master;
         }
 
         @Override
         public String getTexture() {
-            return textureString;
+            return "негр";
         }
 
         @Override
         public void doBusiness() {
             if (master == null)
-                objective = world.getAuctionHouse();
+                objective = (((MacroObject.TradeShip) world.getShip()).localMerchant != null) ? world.getShip() : world.getAuctionHouse();
             else objective = master.objective;
 
             goToObjective();
@@ -66,33 +60,26 @@ public abstract class MicroObject extends ImageView implements Cloneable {
     }
 
     public static class Slaver extends Nigger {
-        static final String textureString = "рабовласник";
+        public final ArrayList<Nigger> niggers = new ArrayList<>();
 
-        ArrayList<Nigger> niggers = new ArrayList<>();
-
-        protected Slaver(String _name, double scale, double x, double y, boolean isActive, World parent, Image image) {
-            super(_name, scale, x, y, isActive, parent, image);
+        public Slaver(String _name, double scale, double x, double y, boolean isActive, World parent) {
+            super(_name, scale, x, y, isActive, parent);
             master = this;
         }
 
-        public Slaver(String _name, double scale, double x, double y, boolean isActive, World parent) {
-            this(_name, scale, x, y, isActive, parent, Utilities.imageFrom(textureString));
-        }
-
-        public Slaver(Slaver slaver) {
+        private Slaver(Slaver slaver) {
             this(slaver.name, slaver.getScaleX(), slaver.getLayoutX(), slaver.getLayoutY(), slaver.isActive, slaver.world);
-            niggers = new ArrayList<>();
         }
 
         @Override
         public String getTexture() {
-            return textureString;
+            return "рабовласник";
         }
 
         @Override
         public void doBusiness() {
             if  (objective == null) if (niggers.isEmpty())
-                objective = (world.getShip().objects.isEmpty()) ? world.getAuctionHouse() : world.getShip();
+                 objective = (world.getShip().objects.isEmpty()) ? world.getAuctionHouse() : world.getShip();
             else objective = world.getHut();
 
             goToObjective();
@@ -105,19 +92,17 @@ public abstract class MicroObject extends ImageView implements Cloneable {
     }
 
     public static class Merchant extends Slaver {
-        static final String textureString = "купець";
-
         public Merchant(String _name, double scale, double x, double y, boolean isActive, World parent) {
-            super(_name, scale, x, y, isActive, parent, Utilities.imageFrom(textureString));
+            super(_name, scale, x, y, isActive, parent);
         }
 
-        public Merchant(Merchant merchant) {
+        private Merchant(Merchant merchant) {
             this(merchant.name, merchant.getScaleX(), merchant.getLayoutX(), merchant.getLayoutY(), merchant.isActive, merchant.world);
         }
 
         @Override
         public String getTexture() {
-            return textureString;
+            return "купець";
         }
 
         @Override
@@ -134,8 +119,8 @@ public abstract class MicroObject extends ImageView implements Cloneable {
         }
     }
 
-    protected MicroObject(String _name, double scale, double x, double y, boolean isActive, World parent, Image image) {
-        super(image);
+    protected MicroObject(String _name, double scale, double x, double y, boolean isActive, World parent) {
+        setImage(Utilities.imageFrom(getTexture()));
         world = parent;
         name = _name;
 
@@ -151,11 +136,6 @@ public abstract class MicroObject extends ImageView implements Cloneable {
         text.setLayoutY(y);
 
         if (isActive) clickAction();
-
-        for (int i = 1; i <= 4; ++i)
-            animationTextures.add(Utilities.imageFrom(getTexture() + i));
-
-        setOnMouseClicked(mouseEvent -> clickAction());
     }
 
     public void clickAction() {
@@ -198,7 +178,7 @@ public abstract class MicroObject extends ImageView implements Cloneable {
 
                 for (var macro : world.macroObjects)
                     if (macro.contains(x + getImage().getWidth(), y + getImage().getHeight())
-                            && macro.contains(x, y + getImage().getHeight())) return;
+                     && macro.contains(x, y + getImage().getHeight())) return;
 
                 move(0, speed, true);
             }
@@ -207,7 +187,7 @@ public abstract class MicroObject extends ImageView implements Cloneable {
 
                 for (var macro : world.macroObjects)
                     if (macro.contains(x + getImage().getWidth(), y + getImage().getHeight())
-                            && macro.contains(x + getImage().getWidth(), y)) return;
+                     && macro.contains(x + getImage().getWidth(), y)) return;
 
                 move(speed, 0, true);
             }
@@ -218,10 +198,19 @@ public abstract class MicroObject extends ImageView implements Cloneable {
                             true);
     }
 
-    private final ArrayList<Image> animationTextures = new ArrayList<>(4);
+    private final ArrayList<Image> animationTextures = makeAnimationTextures();
     private long time = new Date().getTime();
     private int textureIndex = 0;
     private static final int swapThreshold = 150;
+
+    private ArrayList<Image> makeAnimationTextures() {
+        var result = new ArrayList<Image>(4);
+
+        for (int i = 1; i <= 4; ++i)
+            result.add(Utilities.imageFrom(getTexture() + i));
+
+        return result;
+    }
 
     public void move(double x, double y) {
         setLayoutY(getLayoutY() + y);
@@ -343,18 +332,30 @@ public abstract class MicroObject extends ImageView implements Cloneable {
             String name,
             double x, double y,
             double scale,
-            Boolean isActive
+            Boolean isActive,
+            String objective
     ) implements Serializable {
         public MicroObject convert(World parent) {
             var x = parent.view.getX() + x();
             var y = parent.view.getY() + y();
 
-            return switch (className) {
+            var result = switch (className) {
                 case "Nigger" -> new Nigger(name, scale, x, y, isActive, parent);
                 case "Slaver" -> new Slaver(name, scale, x, y, isActive, parent);
                 case "Merchant" -> new Merchant(name, scale, x, y, isActive, parent);
                 default -> null;
             };
+
+            if (result == null) return null;
+
+            result.objective = switch (objective) {
+                case "AuctionHouse" -> parent.getAuctionHouse();
+                case "NiggerHut" -> parent.getHut();
+                case "TradeShip" -> parent.getShip();
+                default -> null;
+            };
+
+            return result;
         }
     }
 
@@ -365,7 +366,8 @@ public abstract class MicroObject extends ImageView implements Cloneable {
                 absoluteX(),
                 absoluteY(),
                 scale,
-                isActive
+                isActive,
+                objective.getClass().getSimpleName()
         );
     }
 }

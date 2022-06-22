@@ -6,10 +6,13 @@ import javafx.scene.Scene;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.*;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.MouseButton;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 
 public class World extends Scene { // UNIVERSAL OBJECT
     private final Group allObjects;
@@ -20,7 +23,7 @@ public class World extends Scene { // UNIVERSAL OBJECT
     public final MiniMap miniMap;
 
     private boolean firstHut = true;
-    private boolean isRunning = true;
+    private boolean isRunning = false;
 
     private record Runner(ArrayList<MicroObject> microObjects) implements Runnable {
         @Override
@@ -39,6 +42,7 @@ public class World extends Scene { // UNIVERSAL OBJECT
     private Thread runner = new Thread(new Runner(microObjects));
 
     public void toggleRunner() {
+        isRunning = !isRunning;
         if (isRunning) {
             System.out.println("Running loop...");
             runner.setDaemon(true);
@@ -48,7 +52,6 @@ public class World extends Scene { // UNIVERSAL OBJECT
             runner.stop();
             runner = new Thread(new Runner(microObjects));
         }
-        isRunning = !isRunning;
     }
 
     World(double width, double height) {
@@ -87,6 +90,7 @@ public class World extends Scene { // UNIVERSAL OBJECT
                 case DOWN, LEFT, RIGHT, UP -> moveCamera(keyEvent.getCode());
                 case F -> toggleRunner();
                 case P -> microObjects.forEach(MicroObject::nullifyObjective);
+                case B -> System.out.println("breakpoint triggered");
             }
         });
 
@@ -127,10 +131,10 @@ public class World extends Scene { // UNIVERSAL OBJECT
         double x = 0, y = 0;
 
         switch (code) {
-            case DOWN -> y = -5;
-            case RIGHT-> x = -5;
-            case UP   -> y =  5;
-            case LEFT -> x =  5;
+            case DOWN -> y = -MicroObject.speed;
+            case RIGHT-> x = -MicroObject.speed;
+            case UP   -> y =  MicroObject.speed;
+            case LEFT -> x =  MicroObject.speed;
         }
 
         if (view.getY() + y > 0 || view.getY() + y < -(view.getImage().getHeight() - getHeight())) return;
@@ -251,7 +255,7 @@ public class World extends Scene { // UNIVERSAL OBJECT
     private void delete() {
         microObjects.removeIf(microObject -> {
             if (microObject.isActive)
-                removeChildren(microObject, microObject.text, microObject.miniMapVersion);
+                removeMicro(microObject);
 
             return microObject.isActive;
         });
@@ -259,7 +263,6 @@ public class World extends Scene { // UNIVERSAL OBJECT
 
     public void removeMicro(MicroObject object) {
         removeChildren(object, object.text, object.miniMapVersion);
-        microObjects.remove(object);
     }
 
     MenuItem deleteSelected() {
@@ -273,10 +276,16 @@ public class World extends Scene { // UNIVERSAL OBJECT
     private MenuItem interactObjects() {
         var item = new MenuItem("Interact selected");
 
-        item.setOnAction(actionEvent -> microObjects.forEach(microObject -> {
-            if (microObject.isWithinRange(microObject.objective))
-                microObject.objective.interactWith(microObject);
-        }));
+        item.setOnAction(actionEvent -> {
+            var list = new ArrayList<MicroObject>();
+
+            microObjects.forEach(microObject -> {
+                if (microObject.isActive)
+                    list.add(microObject);
+            });
+
+            list.forEach(microObject -> microObject.objective.interactWith(microObject));
+        });
 
         return item;
     }
@@ -289,4 +298,7 @@ public class World extends Scene { // UNIVERSAL OBJECT
         return res;
     }
 
+    public boolean has(Node... nodes) {
+        return new HashSet<>(allObjects.getChildren()).containsAll(List.of(nodes));
+    }
 }
