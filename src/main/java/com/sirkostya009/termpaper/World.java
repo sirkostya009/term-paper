@@ -86,7 +86,7 @@ public class World extends Scene { // UNIVERSAL OBJECT
                 case W,A,S,D-> microObjects.forEach(microObject -> microObject.move(keyEvent.getCode()));
                 case DOWN, LEFT, RIGHT, UP -> moveCamera(keyEvent.getCode());
                 case F -> toggleRunner();
-                case P -> System.out.println(microObjects);
+                case P -> microObjects.forEach(MicroObject::nullifyObjective);
             }
         });
 
@@ -96,10 +96,10 @@ public class World extends Scene { // UNIVERSAL OBJECT
     private ArrayList<MacroObject> makeMacroObjects() {
         ArrayList<MacroObject> macroObjects = new ArrayList<>(4);
 
-        var auctionHouse = new MacroObject.AuctionHouse(1,174,1130,this);
+        var auctionHouse = new MacroObject.AuctionHouse(174,1130,this);
         var hut1 = new MacroObject.NiggerHut(1,138,417,this);
         var hut2 = new MacroObject.NiggerHut(.8,530,13,this);
-        var ship = new MacroObject.TradeShip(1,1351,1240,this);
+        var ship = new MacroObject.TradeShip(1351,1240,this);
 
         macroObjects.add(auctionHouse);
         macroObjects.add(hut1);
@@ -124,7 +124,7 @@ public class World extends Scene { // UNIVERSAL OBJECT
     }
 
     public void moveCamera(KeyCode code) {
-        int x = 0, y = 0;
+        double x = 0, y = 0;
 
         switch (code) {
             case DOWN -> y = -5;
@@ -177,8 +177,7 @@ public class World extends Scene { // UNIVERSAL OBJECT
         var result = new MenuItem("Load state");
 
         result.setOnAction(event -> {
-            var chooser = Utilities.genericChooser();
-            chooser.setTitle("Load state...");
+            var chooser = Utilities.genericChooser("Load state...");
 
             try {
                 loadFromFile(chooser.showOpenDialog(getWindow()));
@@ -212,8 +211,7 @@ public class World extends Scene { // UNIVERSAL OBJECT
         var result = new MenuItem("Save state");
 
         result.setOnAction(event -> {
-            var chooser = Utilities.genericChooser();
-            chooser.setTitle("Save state...");
+            var chooser = Utilities.genericChooser("Save state...");
 
             try {
                 saveToFile(chooser.showSaveDialog(getWindow()));

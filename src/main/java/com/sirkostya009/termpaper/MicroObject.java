@@ -21,13 +21,11 @@ public abstract class MicroObject extends ImageView implements Cloneable {
     public final Text text;
 
     boolean isActive = false;
-    boolean reachedObjective = false;
 
     public final World world;
 
     protected MicroObject miniMapVersion = null;
     protected MacroObject objective = null;
-    protected boolean awaiting = false;
 
     public static class Nigger extends MicroObject {
         static final String textureString = "негр";
@@ -54,14 +52,11 @@ public abstract class MicroObject extends ImageView implements Cloneable {
 
         @Override
         public void doBusiness() {
-            if (awaiting) return;
-
             if (master == null)
                 objective = world.getAuctionHouse();
             else objective = master.objective;
 
-            if (!reachedObjective)
-                goToObjective();
+            goToObjective();
         }
 
         @Override
@@ -100,8 +95,7 @@ public abstract class MicroObject extends ImageView implements Cloneable {
                 objective = (world.getShip().objects.isEmpty()) ? world.getAuctionHouse() : world.getShip();
             else objective = world.getHut();
 
-            if (!reachedObjective)
-                goToObjective();
+            goToObjective();
         }
 
         @Override
@@ -131,8 +125,7 @@ public abstract class MicroObject extends ImageView implements Cloneable {
             if (objective == null)
                 objective = world.getShip();
 
-            if (!reachedObjective)
-                goToObjective();
+            goToObjective();
         }
 
         @Override
@@ -265,9 +258,10 @@ public abstract class MicroObject extends ImageView implements Cloneable {
     }
 
     public void goToObjective() {
-        double x = 0, y = 0;
-        double centerX = centerX();
-        double centerY = centerY();
+        var x = 0.;
+        var y = 0.;
+        var centerX = centerX();
+        var centerY = centerY();
 
         if (centerX < objective.absoluteX() ||
             centerX > objective.absoluteX() + objective.getImage().getWidth()) {
@@ -279,10 +273,7 @@ public abstract class MicroObject extends ImageView implements Cloneable {
             y = objective.absoluteY() - centerY;
         }
 
-        if (x == 0 && y == 0) {
-            reachedObjective = true;
-            return;
-        }
+        if (x == 0 && y == 0) return;
 
         if      (x < -speed) x = -speed;
         else if (x >  speed) x =  speed;
@@ -339,6 +330,10 @@ public abstract class MicroObject extends ImageView implements Cloneable {
     }
 
     abstract public void doBusiness();
+
+    public void nullifyObjective() {
+        objective = null;
+    }
 
     @Override
     abstract public MicroObject clone();

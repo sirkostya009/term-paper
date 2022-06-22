@@ -22,35 +22,35 @@ abstract public class MacroObject extends ImageView {
         setLayoutX(posX);
         setLayoutY(posY);
 
-        setOnMouseClicked(mouseEvent -> menu(mouseEvent.getSceneX(), mouseEvent.getSceneY()).show(world.getWindow(), mouseEvent.getScreenX(), mouseEvent.getScreenY()));
+        setOnMouseClicked(mouseEvent -> menu(mouseEvent.getSceneX(), mouseEvent.getSceneY())
+                                            .show(world.getWindow(), mouseEvent.getScreenX(), mouseEvent.getScreenY()));
     }
 
     public static class AuctionHouse extends MacroObject {
-        public AuctionHouse(double scale, int posX, int posY, World world) {
-            super(scale, posX, posY, world, Utilities.imageFrom("хата"));
+        public AuctionHouse(int posX, int posY, World world) {
+            super(1, posX, posY, world, Utilities.imageFrom("хата"));
         }
 
         @Override
         public void interactWith(MicroObject object) {
+            if (!object.isWithinRange(this)) return;
+
             if (object instanceof MicroObject.Slaver slaver) {
                 if (objects.isEmpty()) return;
                 slaver.objective = (slaver instanceof MicroObject.Merchant) ? world.getShip() : world.getHut();
-                slaver.reachedObjective = false;
-                slaver.awaiting = false;
                 getNiggersOut(slaver);
             }
             else if (object instanceof MicroObject.Nigger nigger) {
                 objects.add(nigger);
                 nigger.world.removeMicro(nigger);
-                nigger.awaiting = true;
                 nigger.objective = null;
             }
         }
     }
 
     public static class TradeShip extends MacroObject {
-        public TradeShip(double scale, int posX, int posY, World world) {
-            super(scale, posX, posY, world, Utilities.imageFrom("корабель"));
+        public TradeShip(int posX, int posY, World world) {
+            super(1, posX, posY, world, Utilities.imageFrom("корабель"));
         }
 
         @Override
@@ -58,14 +58,11 @@ abstract public class MacroObject extends ImageView {
             if (object instanceof MicroObject.Merchant merchant) {
                 objects.add(merchant);
                 merchant.world.removeMicro(merchant);
-                merchant.reachedObjective = false;
                 merchant.objective = world.getAuctionHouse();
             }
             else if (object instanceof MicroObject.Slaver slaver) {
                 if (objects.isEmpty()) return;
                 slaver.objective = world.getHut();
-                slaver.reachedObjective = false;
-                slaver.awaiting = false;
                 getNiggersOut(slaver);
             }
         }
@@ -125,9 +122,9 @@ abstract public class MacroObject extends ImageView {
         micro.text.setLayoutX(x);
         micro.text.setLayoutY(y);
 
-        world.addChildren(micro, micro.text);
         world.microObjects.add(micro);
         world.miniMap.push(micro);
+        world.addChildren(micro, micro.text, micro.miniMapVersion);
     }
 
     private MenuItem getAllMicrosOut() {
@@ -181,14 +178,11 @@ abstract public class MacroObject extends ImageView {
 
         objects.removeIf(object1 -> {
             if (!(object1 instanceof MicroObject.Nigger nigger)) return false;
-            nigger.awaiting = false;
             nigger.objective = newMaster.objective;
-            nigger.reachedObjective = false;
             nigger.master = newMaster;
             newMaster.niggers.add(nigger);
             freeMicro(nigger, x[0], y);
             x[0] += newMaster.getImage().getWidth();
-            nigger.awaiting = false;
             return true;
         });
     }

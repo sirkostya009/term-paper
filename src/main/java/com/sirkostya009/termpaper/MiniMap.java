@@ -33,14 +33,31 @@ public class MiniMap {
                     parent.view.getImage().getHeight()) -
                     parent.getHeight() / 2;
 
+            if (x + parent.getWidth() > parent.view.getImage().getWidth())
+                x = parent.view.getImage().getWidth() - parent.getWidth();
+            else if (x < 0) x = 0;
+
+            if (y + parent.getHeight() > parent.view.getImage().getHeight())
+                y = parent.view.getImage().getHeight() - parent.getHeight();
+            else if (y < 0) y = 0;
+
             parent.setPos(x, y);
 
             x = mouseEvent.getSceneX() - camera.getWidth() / 2;
             y = mouseEvent.getSceneY() - camera.getHeight() / 2;
 
+            if (x < 0) x = 0;
+            if (y < 0) y = 0;
+            if (x + camera.getWidth() > view.getFitWidth())
+                x = view.getFitWidth() - camera.getWidth();
+            if (y + camera.getHeight() > view.getFitHeight())
+                y = view.getFitHeight() - camera.getHeight();
+
             camera.setLayoutX(x);
             camera.setLayoutY(y);
         });
+
+        camera.setOnMouseClicked(view.getOnMouseClicked());
 
         parent.addChildren(view, camera);
     }

@@ -53,9 +53,9 @@ public class MicroObjectCreator extends Stage {
         var active = isActive.isSelected();
 
         return switch (microObjectLevel.getValue()) {
+            case nigga -> new MicroObject.Nigger(name, scale, x, y, active, parent);
             case slaver -> new MicroObject.Slaver(name, scale, x, y, active, parent);
             case merchant -> new MicroObject.Merchant(name, scale, x, y, active, parent);
-            case nigga -> new MicroObject.Nigger(name, scale, x, y, active, parent);
             default -> null;
         };
     }
