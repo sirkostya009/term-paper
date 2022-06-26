@@ -11,6 +11,17 @@ import java.util.Date;
 import java.util.Objects;
 
 public abstract class MicroObject extends ImageView implements Cloneable {
+    private static final double spacing = 5;
+
+    public enum LEVEL {
+        NIGGER, SLAVER, MERCHANT, TOTAL
+    }
+
+    boolean linedUp = false;
+
+    ArrayList<MicroObject> privateObjects = new ArrayList<>();
+
+    LEVEL level;
     public static final int speed = 5;
     private static int counter = 0;
 
@@ -26,12 +37,53 @@ public abstract class MicroObject extends ImageView implements Cloneable {
 
     protected MicroObject miniMapVersion = null;
     protected MacroObject objective = null;
+    protected MicroObject captainObj = null;
+
+    protected boolean captain = false;
+    public void setCaptain(boolean captain) {
+        this.captain = captain;
+    }
+
+    public boolean isCaptain() {
+        return captain;
+    }
+
+    public void moveToCaptain() {
+        if (isCaptain()) return;
+        if (linedUp) return;
+
+        if (captainObj == null)
+            world.microObjects.forEach(microObject -> {
+                if (microObject.isCaptain() && microObject.level == level) {
+                    captainObj = microObject;
+                    captainObj.privateObjects.add(this);
+                }
+            });
+
+        double x = 0, y = 0;
+
+        if (absoluteY() > captainObj.absoluteY()) y = -speed;
+        if (absoluteY() < captainObj.absoluteY()) y =  speed;
+
+        var position = captainObj.privateObjects.indexOf(this) + 1;
+        var destinationX = captainObj.absoluteX() + (captainObj.getImage().getWidth() * position) + (spacing * position);
+
+        if (absoluteX() > destinationX) x = -speed;
+        if (absoluteX() < destinationX) x =  speed;
+
+        if (Math.abs(captainObj.absoluteY() - absoluteY()) < 5 && Math.abs(absoluteX() - destinationX) < 5)
+            linedUp = true;
+
+        move(x, y, true);
+        miniMapVersion.move(x / MiniMap.divisor, y / MiniMap.divisor);
+    }
 
     public static class Nigger extends MicroObject {
         Slaver master = null;
 
         public Nigger(String _name, double scale, double x, double y, boolean isActive, World parent) {
             super(_name, scale, x, y, isActive, parent);
+            level = LEVEL.NIGGER;
         }
 
         private Nigger(Nigger nigger) {
@@ -65,6 +117,7 @@ public abstract class MicroObject extends ImageView implements Cloneable {
         public Slaver(String _name, double scale, double x, double y, boolean isActive, World parent) {
             super(_name, scale, x, y, isActive, parent);
             master = this;
+            level = LEVEL.SLAVER;
         }
 
         private Slaver(Slaver slaver) {
@@ -94,6 +147,7 @@ public abstract class MicroObject extends ImageView implements Cloneable {
     public static class Merchant extends Slaver {
         public Merchant(String _name, double scale, double x, double y, boolean isActive, World parent) {
             super(_name, scale, x, y, isActive, parent);
+            level = LEVEL.MERCHANT;
         }
 
         private Merchant(Merchant merchant) {
@@ -293,10 +347,9 @@ public abstract class MicroObject extends ImageView implements Cloneable {
 
     @Override
     public boolean equals(Object o) {
+        if (this == o) return true;
         if (o instanceof MicroObject object)
-            return getScaleX() == object.getScaleX() &&
-                   text.getText().equals(object.text.getText()) &&
-                   Objects.equals(getTexture(), getTexture());
+            return id == object.id;
 
         return false;
     }

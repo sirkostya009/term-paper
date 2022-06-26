@@ -1,0 +1,27 @@
+<component name="ArtifactManager">
+  <artifact name="term-paper:jar2">
+    <output-path>$PROJECT_DIR$/out/artifacts/term_paper_jar2</output-path>
+    <root id="root">
+      <element id="archive" name="term-paper.jar">
+        <element id="directory" name="META-INF">
+          <element id="file-copy" path="$PROJECT_DIR$/src/main/resources/META-INF/MANIFEST.MF" />
+        </element>
+        <element id="module-output" name="term-paper" />
+      </element>
+      <element id="library" level="project" name="Maven: org.jetbrains:annotations:23.0.0" />
+      <element id="library" level="project" name="Maven: org.openjfx:javafx-fxml:win:17.0.1" />
+      <element id="library" level="project" name="Maven: org.jetbrains.kotlin:kotlin-stdlib:1.6.21" />
+      <element id="library" level="project" name="Maven: org.openjfx:javafx-controls:win:17.0.1" />
+      <element id="library" level="project" name="Maven: org.openjfx:javafx-base:17.0.1" />
+      <element id="library" level="project" name="Maven: org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.6.21" />
+      <element id="library" level="project" name="Maven: org.openjfx:javafx-fxml:17.0.1" />
+      <element id="library" level="project" name="Maven: org.controlsfx:controlsfx:11.1.0" />
+      <element id="library" level="project" name="Maven: org.jetbrains.kotlin:kotlin-stdlib-common:1.6.21" />
+      <element id="library" level="project" name="Maven: org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.6.21" />
+      <element id="library" level="project" name="Maven: org.openjfx:javafx-controls:17.0.1" />
+      <element id="library" level="project" name="Maven: org.openjfx:javafx-graphics:17.0.1" />
+      <element id="library" level="project" name="Maven: org.openjfx:javafx-graphics:win:17.0.1" />
+      <element id="library" level="project" name="Maven: org.openjfx:javafx-base:win:17.0.1" />
+    </root>
+  </artifact>
+</component>

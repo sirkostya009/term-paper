@@ -1,13 +1,16 @@
 package com.sirkostya009.termpaper;
 
+import javafx.animation.AnimationTimer;
+import javafx.geometry.Pos;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Scene;
-import javafx.scene.control.ContextMenu;
-import javafx.scene.control.MenuItem;
+import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
+import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -91,10 +94,92 @@ public class World extends Scene { // UNIVERSAL OBJECT
                 case F -> toggleRunner();
                 case P -> microObjects.forEach(MicroObject::nullifyObjective);
                 case B -> System.out.println("breakpoint triggered");
+                case N -> automator.toggle();
+                case CAPS -> callPicker();
             }
         });
 
         miniMap = new MiniMap(this);
+    }
+
+    Automator automator = new Automator(microObjects);
+
+    public static class Automator extends AnimationTimer {
+        ArrayList<MicroObject> microObjects;
+        private final int[] totals = new int[MicroObject.LEVEL.TOTAL.ordinal()];
+        private final boolean[] alignments = new boolean[MicroObject.LEVEL.TOTAL.ordinal()];
+
+        public Automator(ArrayList<MicroObject> microObjects) {
+            this.microObjects = microObjects;
+        }
+
+        private boolean iSeeItAsAnAbsoluteWin = false;
+
+        private void tellUser(MicroObject.LEVEL level) {
+            if (iSeeItAsAnAbsoluteWin) return;
+
+            iSeeItAsAnAbsoluteWin = true;
+
+            var stage = new Stage();
+
+            var root = new VBox(new Label(level + " team wins!"));
+            root.setAlignment(Pos.CENTER);
+
+            stage.setScene(new Scene(root, 200, 200));
+            stage.show();
+        }
+
+        @Override
+        public void handle(long l) {
+            microObjects.forEach(MicroObject::moveToCaptain);
+
+            microObjects.forEach(microObject ->  {
+                if (!microObject.isCaptain()) return;
+
+                final int[] counter = {0};
+                totals[microObject.level.ordinal()] = microObject.privateObjects.size();
+
+                microObject.privateObjects.forEach(microObject1 -> {
+                    if (microObject1.linedUp) counter[0]++;
+                });
+
+                if (counter[0] == microObject.privateObjects.size())
+                    alignments[microObject.level.ordinal()] = true;
+            });
+
+            var max = -1;
+            var maxI = MicroObject.LEVEL.TOTAL;
+
+            for (var i : MicroObject.LEVEL.values())
+                if (i == MicroObject.LEVEL.TOTAL) break;
+                else if  (totals[i.ordinal()] > max) {
+                    max = totals[i.ordinal()];
+                    maxI= i;
+                }
+
+            if (max != -1 && alignments[maxI.ordinal()]) tellUser(maxI);
+        }
+
+        private boolean isRunning = false;
+
+        public void toggle() {
+            isRunning = !isRunning;
+
+            if (isRunning) start();
+            else           stop();
+        }
+    }
+
+    private void callPicker() {
+        var stage = new Stage();
+
+        var vbox = new VBox();
+        vbox.setAlignment(Pos.CENTER);
+
+        microObjects.forEach(microObject -> vbox.getChildren().add(new MicroObjectOption(microObject)));
+
+        stage.setScene(new Scene(new ScrollPane(vbox)));
+        stage.show();
     }
 
     private ArrayList<MacroObject> makeMacroObjects() {
