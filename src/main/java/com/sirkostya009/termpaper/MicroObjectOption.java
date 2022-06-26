@@ -7,10 +7,9 @@ import javafx.scene.text.Text;
 
 public class MicroObjectOption extends HBox {
     public MicroObjectOption(MicroObject reference) {
+        super(new ImageView(reference.getImage()), new Text(reference.name), new CaptainButton(reference));
         setAlignment(Pos.CENTER);
         setSpacing(15);
         setPrefSize(200, 50);
-
-        getChildren().addAll(new ImageView(reference.getImage()), new Text(reference.name), new CaptainButton(reference));
     }
 }
