@@ -1,62 +1,86 @@
 package com.sirkostya009.termpaper;
 
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
+import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.fxml.Initializable;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.ChoiceBox;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
-public class MicroObjectCreator extends Stage {
+import java.io.IOException;
+import java.net.URL;
+import java.util.ResourceBundle;
+
+public class MicroObjectCreator implements Initializable {
     private static final String nigga = "Негр", slaver = "Рабовласник", merchant = "Работоргівець";
 
-    private final TextField nameField = new TextField("Name"), scaleField = new TextField("Scale");
+    @FXML
+    private TextField nameField, scaleField;
 
-    private final CheckBox isActive = new CheckBox("Is active");
+    @FXML
+    private CheckBox isActive;
 
-    private final Button create = Utilities.genericCreateButton();
+    @FXML
+    private ChoiceBox<String> microObjectLevel;
 
-    private final ChoiceBox<String> microObjectLevel = new ChoiceBox<>();
-
-    final double x, y;
-
-    public MicroObjectCreator(double x, double y) {
-        this.x = x;
-        this.y = y;
-
-        microObjectLevel.getItems().addAll(nigga, slaver, merchant);
-        microObjectLevel.setValue(nigga);
-
-        var vBox = Utilities.genericVBox(
-                nameField,
-                scaleField,
-                isActive,
-                microObjectLevel,
-                Utilities.genericHBox(
-                        create,
-                        Utilities.genericCancelButton(this)
-                )
-        );
-
-        setScene(new Scene(vBox, 200, 300));
-        setTitle("Create new MicroObject");
-        setResizable(false);
-        show();
-    }
-
-    public void setCreateAction(EventHandler<ActionEvent> handler) {
-        create.setOnAction(handler);
-    }
-
-    public MicroObject makeMicroObject(World parent) {
+    @FXML
+    private void create() {
         var name = nameField.getText();
         var scale = Double.parseDouble(scaleField.getText());
         var active = isActive.isSelected();
 
-        return switch (microObjectLevel.getValue()) {
-            case nigga -> new MicroObject.Nigger(name, scale, x, y, active, parent);
-            case slaver -> new MicroObject.Slaver(name, scale, x, y, active, parent);
-            case merchant -> new MicroObject.Merchant(name, scale, x, y, active, parent);
+        handler.handle(switch (microObjectLevel.getValue()) {
+            case nigga -> new MicroObject.Nigger(name, scale, x, y, active);
+            case slaver -> new MicroObject.Slaver(name, scale, x, y, active);
+            case merchant -> new MicroObject.Merchant(name, scale, x, y, active);
             default -> null;
-        };
+        });
+
+        close();
+    }
+
+    @FXML
+    private void close() {
+        stage.close();
+    }
+
+    @Override
+    public void initialize(URL url, ResourceBundle resourceBundle) {
+        microObjectLevel.getItems().addAll(nigga, slaver, merchant);
+        microObjectLevel.setValue(nigga);
+    }
+
+    private double x, y;
+    private Handler handler;
+    private Stage stage;
+
+    public static void call(double x, double y, Handler handler) {
+        var loader = new FXMLLoader(MicroObjectCreator.class.getResource("object-creator.fxml"));
+        VBox root = null;
+        try {
+            root = loader.load();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        if (root == null) return;
+
+        var controller = (MicroObjectCreator) loader.getController();
+        controller.x = x;
+        controller.y = y;
+        controller.handler = handler;
+
+        controller.stage = new Stage();
+        controller.stage.setScene(new Scene(root));
+        controller.stage.setTitle("New MicroObject...");
+        controller.stage.setResizable(false);
+        controller.stage.show();
+    }
+
+    public interface Handler {
+        void handle(MicroObject microObject);
     }
 }
