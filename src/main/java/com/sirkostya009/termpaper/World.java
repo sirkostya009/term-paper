@@ -5,65 +5,37 @@ import javafx.geometry.Pos;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.Label;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
-import java.io.*;
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
 
-public class World extends Scene { // UNIVERSAL OBJECT
-    private final Group allObjects;
+import static com.sirkostya009.termpaper.MacroObject.*;
+import static com.sirkostya009.termpaper.MicroObject.MicroConfig;
+
+public final class World extends Scene { // UNIVERSAL OBJECT
+    public final static World INSTANCE = new World(640, 480);
+
     public final ArrayList<MicroObject> microObjects = new ArrayList<>();
-    public final ArrayList<MacroObject> macroObjects;
+    public final AuctionHouse auctionHouse = new AuctionHouse(174,1130);
+    public final NiggerHut hut1 = new NiggerHut(1,138,417);
+    public final NiggerHut hut2 = new NiggerHut(.8,530,13);
+    public final TradeShip tradeShip = new TradeShip(1351,1240);
+    public final MacroObject[] macroObjects = new MacroObject[]{auctionHouse, hut1, hut2, tradeShip};
 
-    public final ImageView view;
-    public final MiniMap miniMap;
+    public final ImageView view  = new ImageView(Utilities.imageFrom("універсалич"));
+    public final MiniMap miniMap = new MiniMap(this);
 
-    private boolean firstHut = true;
-    private boolean isRunning = false;
-
-    private record Runner(ArrayList<MicroObject> microObjects) implements Runnable {
-        @Override
-        public void run() {
-            while (true) {
-                try {
-                    Thread.sleep(50);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                microObjects.forEach(MicroObject::doBusiness);
-            }
-        }
-    }
-
-    private Thread runner = new Thread(new Runner(microObjects));
-
-    public void toggleRunner() {
-        isRunning = !isRunning;
-        if (isRunning) {
-            System.out.println("Running loop...");
-            runner.setDaemon(true);
-            runner.start();
-        } else {
-            System.out.println("Stopping loop...");
-            runner.stop();
-            runner = new Thread(new Runner(microObjects));
-        }
-    }
-
-    World(double width, double height) {
+    private World(double width, double height) {
         super(new Group(), width, height);
-        allObjects = (Group) getRoot();
-
-        view = new ImageView(Utilities.imageFrom("універсалич"));
-        addChildren(view);
-        macroObjects = makeMacroObjects();
+        addChildren(view, miniMap.view, miniMap.camera);
 
         view.setOnMouseClicked(mouseEvent -> {
             var x = mouseEvent.getSceneX();
@@ -86,32 +58,48 @@ public class World extends Scene { // UNIVERSAL OBJECT
 
         setOnKeyPressed(keyEvent -> {
             switch (keyEvent.getCode()) {
-                case DELETE -> delete();
-                case INSERT -> makeNewMicroObject(width / 2,height / 2);
+                case DELETE -> deleteAll();
+                case INSERT -> callCreator(getWidth() / 2, getHeight() / 2);
                 case ESCAPE -> microObjects.forEach(MicroObject::deselect);
                 case W,A,S,D-> microObjects.forEach(microObject -> microObject.move(keyEvent.getCode()));
                 case DOWN, LEFT, RIGHT, UP -> moveCamera(keyEvent.getCode());
-                case F -> toggleRunner();
+                case F -> runner.toggle();
                 case P -> microObjects.forEach(MicroObject::nullifyObjective);
                 case B -> System.out.println("breakpoint triggered");
                 case N -> automator.toggle();
                 case CAPS -> callPicker();
             }
         });
-
-        miniMap = new MiniMap(this);
     }
 
-    Automator automator = new Automator(microObjects);
+    private final Runner runner = new Runner();
 
-    public static class Automator extends AnimationTimer {
-        ArrayList<MicroObject> microObjects;
+    private class Runner extends AnimationTimer {
+        private long prev = 0;
+
+        @Override
+        public void handle(long l) {
+            if (l - prev < 40000000) return;
+
+            prev = l;
+            microObjects.forEach(MicroObject::doBusiness);
+        }
+
+        private boolean running = false;
+
+        public void toggle() {
+            running = !running;
+
+            if (running) start();
+            else         stop();
+        }
+    }
+
+    private final Automator automator = new Automator();
+
+    private class Automator extends AnimationTimer {
         private final int[] totals = new int[MicroObject.LEVEL.TOTAL.ordinal()];
         private final boolean[] alignments = new boolean[MicroObject.LEVEL.TOTAL.ordinal()];
-
-        public Automator(ArrayList<MicroObject> microObjects) {
-            this.microObjects = microObjects;
-        }
 
         private boolean iSeeItAsAnAbsoluteWin = false;
 
@@ -134,13 +122,13 @@ public class World extends Scene { // UNIVERSAL OBJECT
             microObjects.forEach(MicroObject::moveToCaptain);
 
             microObjects.forEach(microObject ->  {
-                if (!microObject.isCaptain()) return;
+                if (!microObject.isCaptain) return;
 
                 final int[] counter = {0};
                 totals[microObject.level.ordinal()] = microObject.privateObjects.size();
 
                 microObject.privateObjects.forEach(microObject1 -> {
-                    if (microObject1.linedUp) counter[0]++;
+                    if (microObject1.isLinedUp) counter[0]++;
                 });
 
                 if (counter[0] == microObject.privateObjects.size())
@@ -170,56 +158,21 @@ public class World extends Scene { // UNIVERSAL OBJECT
         }
     }
 
-    private void callPicker() {
-        var stage = new Stage();
-
-        var vbox = new VBox();
-        vbox.setAlignment(Pos.CENTER);
-
-        microObjects.forEach(microObject -> vbox.getChildren().add(new MicroObjectOption(microObject)));
-
-        stage.setScene(new Scene(new ScrollPane(vbox)));
-        stage.show();
-    }
-
-    private ArrayList<MacroObject> makeMacroObjects() {
-        ArrayList<MacroObject> macroObjects = new ArrayList<>(4);
-
-        var auctionHouse = new MacroObject.AuctionHouse(174,1130,this);
-        var hut1 = new MacroObject.NiggerHut(1,138,417,this);
-        var hut2 = new MacroObject.NiggerHut(.8,530,13,this);
-        var ship = new MacroObject.TradeShip(1351,1240,this);
-
-        macroObjects.add(auctionHouse);
-        macroObjects.add(hut1);
-        macroObjects.add(hut2);
-        macroObjects.add(ship);
-        addChildren(auctionHouse, hut1, hut2, ship);
-
-        return macroObjects;
-    }
-
-    public MacroObject getAuctionHouse() {
-        return macroObjects.get(0);
-    }
+    private boolean firstHut = true;
 
     public MacroObject getHut() {
         firstHut = !firstHut;
-        return (firstHut) ? macroObjects.get(1) : macroObjects.get(2);
-    }
-
-    public MacroObject getShip() {
-        return macroObjects.get(3);
+        return (firstHut) ? hut1 : hut2;
     }
 
     public void moveCamera(KeyCode code) {
         double x = 0, y = 0;
 
         switch (code) {
-            case DOWN -> y = -MicroObject.speed;
-            case RIGHT-> x = -MicroObject.speed;
-            case UP   -> y =  MicroObject.speed;
-            case LEFT -> x =  MicroObject.speed;
+            case DOWN -> y = -MicroObject.SPEED;
+            case RIGHT-> x = -MicroObject.SPEED;
+            case UP   -> y =  MicroObject.SPEED;
+            case LEFT -> x =  MicroObject.SPEED;
         }
 
         if (view.getY() + y > 0 || view.getY() + y < -(view.getImage().getHeight() - getHeight())) return;
@@ -233,11 +186,9 @@ public class World extends Scene { // UNIVERSAL OBJECT
         view.setX(view.getX() + x);
         view.setY(view.getY() + y);
 
-        for (var micro : microObjects)
-            micro.move(x, y);
+        for (var micro : microObjects) micro.move(x, y);
 
-        for (var macro : macroObjects)
-            macro.move(x, y);
+        for (var macro : macroObjects) macro.move(x, y);
     }
 
     public void setPos(double x, double y) {
@@ -245,99 +196,35 @@ public class World extends Scene { // UNIVERSAL OBJECT
     }
 
     public void addChildren(Node... nodes) {
-        allObjects.getChildren().addAll(nodes);
+        ((Group) getRoot()).getChildren().addAll(nodes);
     }
 
     public void removeChildren(Node... nodes) {
-        allObjects.getChildren().removeAll(nodes);
+        ((Group) getRoot()).getChildren().removeAll(nodes);
     }
 
-    ContextMenu menu(double x, double y) {
-        return new ContextMenu(
-                newMicroObject(x, y),
-                interactObjects(),
-                saveState(),
-                loadState(),
-                deleteSelected()
-        );
-    }
-
-    private MenuItem loadState() {
-        var result = new MenuItem("Load state");
-
-        result.setOnAction(event -> {
-            var chooser = Utilities.genericChooser("Load state...");
-
-            try {
-                loadFromFile(chooser.showOpenDialog(getWindow()));
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
-
-        return result;
-    }
-
-    private void loadFromFile(File file) throws Exception {
-        if (file == null) return;
-
-        var input = new ObjectInputStream(new FileInputStream(file));
-
-        microObjects.forEach(this::removeMicro);
-        microObjects.clear();
-
-        var configs = (ArrayList<MicroObject.MicroConfig>) input.readObject();
-
-        configs.forEach(microConfig -> {
-            var micro = microConfig.convert(this);
-            miniMap.push(micro);
-            microObjects.add(micro);
-        });
-        microObjects.forEach(microObject -> addChildren(microObject, microObject.text, microObject.miniMapVersion));
-    }
-
-    private MenuItem saveState() {
-        var result = new MenuItem("Save state");
-
-        result.setOnAction(event -> {
-            var chooser = Utilities.genericChooser("Save state...");
-
-            try {
-                saveToFile(chooser.showSaveDialog(getWindow()));
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
-
-        return result;
-    }
-
-    private void saveToFile(File file) throws Exception {
-        if (file == null) return;
-
-        var output = new ObjectOutputStream(new FileOutputStream(file));
-
-        var configs = new ArrayList<MicroObject.MicroConfig>(microObjects.size());
-
-        microObjects.forEach(microObject -> configs.add(microObject.convertToConfig()));
-
-        output.writeObject(configs);
-    }
-
-    public void makeNewMicroObject(double x, double y) {
-        var creator = new MicroObjectCreator(x, y);
-        creator.setCreateAction(actionEvent -> {
-            var object = creator.makeMicroObject(this);
-            miniMap.push(object);
-            addChildren(object, object.text, object.miniMapVersion);
-            microObjects.add(object);
-            macroObjects.forEach(Node::toFront);
+    public void callCreator(double x, double y) {
+        MicroObjectCreator.call(x, y, microObject -> {
+            miniMap.push(microObject);
+            addChildren(microObject, microObject.text, microObject.miniMapVersion);
+            microObjects.add(microObject);
+            for (var macro : macroObjects) macro.toFront();
             miniMap.toFront();
-            creator.close();
         });
     }
 
-    private void delete() {
+    private void callPicker() {
+        var vbox = new VBox();
+        vbox.setAlignment(Pos.CENTER);
+
+        microObjects.forEach(microObject -> vbox.getChildren().add(new MicroObjectOption(microObject)));
+
+        var stage = new Stage();
+        stage.setScene(new Scene(new ScrollPane(vbox)));
+        stage.show();
+    }
+
+    public void deleteAll() {
         microObjects.removeIf(microObject -> {
             if (microObject.isActive)
                 removeMicro(microObject);
@@ -350,10 +237,20 @@ public class World extends Scene { // UNIVERSAL OBJECT
         removeChildren(object, object.text, object.miniMapVersion);
     }
 
-    MenuItem deleteSelected() {
-        var res = new MenuItem("Delete selected");
+    private ContextMenu menu(double x, double y) {
+        return new ContextMenu(
+                newMicroObject(x, y),
+                interactObjects(),
+                saveState(),
+                loadState(),
+                deleteSelected()
+        );
+    }
 
-        res.setOnAction(actionEvent -> delete());
+    private MenuItem newMicroObject(double x, double y) {
+        var res = new MenuItem("New MicroObject here...");
+
+        res.setOnAction(actionEvent -> callCreator(x, y));
 
         return res;
     }
@@ -375,15 +272,59 @@ public class World extends Scene { // UNIVERSAL OBJECT
         return item;
     }
 
-    MenuItem newMicroObject(double x, double y) {
-        var res = new MenuItem("New MicroObject here...");
+    private MenuItem saveState() {
+        var result = new MenuItem("Save state");
 
-        res.setOnAction(actionEvent -> makeNewMicroObject(x, y));
+        result.setOnAction(event -> {
+            var chooser = Utilities.genericChooser("Save state...");
 
-        return res;
+            var configs = new ArrayList<MicroObject.MicroConfig>(microObjects.size());
+
+            microObjects.forEach(microObject -> configs.add(microObject.convertToConfig()));
+
+            try {
+                Utilities.saveState(chooser.showSaveDialog(getWindow()), configs);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+
+        return result;
     }
 
-    public boolean has(Node... nodes) {
-        return new HashSet<>(allObjects.getChildren()).containsAll(List.of(nodes));
+    private MenuItem loadState() {
+        var result = new MenuItem("Load state");
+
+        result.setOnAction(event -> {
+            var chooser = Utilities.genericChooser("Load state...");
+
+            try {
+                var read = Utilities.<ArrayList<MicroConfig>>loadState(chooser.showOpenDialog(getWindow()));
+
+                microObjects.forEach(this::removeMicro);
+                microObjects.clear();
+
+                read.forEach(microConfig -> {
+                    var object = microConfig.convert();
+                    if (object == null) return;
+                    miniMap.push(object);
+                    microObjects.add(object);
+                });
+
+                microObjects.forEach(microObject -> addChildren(microObject, microObject.text, microObject.miniMapVersion));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+
+        return result;
+    }
+
+    private MenuItem deleteSelected() {
+        var res = new MenuItem("Delete selected");
+
+        res.setOnAction(actionEvent -> deleteAll());
+
+        return res;
     }
 }
