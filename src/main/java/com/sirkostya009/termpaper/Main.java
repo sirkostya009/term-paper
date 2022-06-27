@@ -6,7 +6,7 @@ import javafx.stage.Stage;
 public class Main extends Application {
     @Override
     public void start(Stage stage) {
-        stage.setScene(new World(640, 480));
+        stage.setScene(World.INSTANCE);
         stage.setResizable(false);
         stage.setTitle("Gaem");
         stage.show();
