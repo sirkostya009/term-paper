@@ -8,13 +8,13 @@ import javafx.scene.input.MouseButton;
 
 import java.util.ArrayList;
 
+import static com.sirkostya009.termpaper.World.INSTANCE;
+
 abstract public class MacroObject extends ImageView {
     public final ArrayList<MicroObject> objects = new ArrayList<>();
-    public final World world;
 
-    protected MacroObject(double scale, int posX, int posY, World parent) {
+    protected MacroObject(double scale, double posX, double posY) {
         setImage(Utilities.imageFrom(getTexture()));
-        world = parent;
 
         setScaleX(scale);
         setScaleY(scale);
@@ -25,30 +25,34 @@ abstract public class MacroObject extends ImageView {
         setOnMouseClicked(mouseEvent -> {
             if (mouseEvent.getButton() == MouseButton.SECONDARY)
                 menu(mouseEvent.getSceneX(), mouseEvent.getSceneY())
-                    .show(world.getWindow(), mouseEvent.getScreenX(), mouseEvent.getScreenY());
+                    .show(INSTANCE.getWindow(), mouseEvent.getScreenX(), mouseEvent.getScreenY());
         });
     }
 
-    protected MacroObject(int x, int y, World parent) {
-        this(1, x, y, parent);
+    protected MacroObject(double x, double y) {
+        this(1, x, y);
     }
 
+    abstract public void interactWith(MicroObject object);
+
+    abstract public String getTexture();
+
     public static class AuctionHouse extends MacroObject {
-        public AuctionHouse(int posX, int posY, World world) {
-            super(posX, posY, world);
+        public AuctionHouse(int posX, int posY) {
+            super(posX, posY);
         }
 
         @Override
         public void interactWith(MicroObject object) { // house interaction
-            if (!object.isWithinRange(this)) return;
+            if (object.isNotWithinRange(this)) return;
 
             if (object instanceof MicroObject.Slaver slaver) {
                 if (objects.isEmpty()) return;
-                slaver.objective = (slaver instanceof MicroObject.Merchant) ? world.getShip() : world.getHut();
+                slaver.objective = (slaver instanceof MicroObject.Merchant) ? INSTANCE.tradeShip : INSTANCE.getHut();
                 getNiggersOut(slaver);
             } else if (object instanceof MicroObject.Nigger nigger) {
                 objects.add(nigger);
-                nigger.world.removeMicro(nigger);
+                INSTANCE.removeMicro(nigger);
                 nigger.objective = null;
             }
         }
@@ -60,29 +64,29 @@ abstract public class MacroObject extends ImageView {
     }
 
     public static class TradeShip extends MacroObject {
-        public TradeShip(int posX, int posY, World world) {
-            super(posX, posY, world);
+        public TradeShip(double posX, double posY) {
+            super(posX, posY);
         }
 
         public MicroObject.Merchant localMerchant = null;
 
         @Override
         public void interactWith(MicroObject object) { // ship interaction
-            if (!object.isWithinRange(this)) return;
+            if (object.isNotWithinRange(this)) return;
 
             if (object instanceof MicroObject.Merchant merchant) {
                 localMerchant = merchant;
                 if (objects.isEmpty()) return;
-                merchant.objective = world.getAuctionHouse();
+                merchant.objective = INSTANCE.auctionHouse;
                 getNiggersOut(merchant);
                 localMerchant = null;
             } else if (object instanceof MicroObject.Slaver slaver) {
                 if (objects.isEmpty()) return;
-                slaver.objective = world.getHut();
+                slaver.objective = INSTANCE.getHut();
                 getNiggersOut(slaver);
             } else if (object instanceof MicroObject.Nigger nigger) {
                 objects.add(nigger);
-                world.removeMicro(nigger);
+                INSTANCE.removeMicro(nigger);
             }
         }
 
@@ -98,21 +102,21 @@ abstract public class MacroObject extends ImageView {
     }
 
     public static class NiggerHut extends MacroObject {
-        public NiggerHut(double scale, int posX, int posY, World world) {
-            super(scale, posX, posY, world);
+        public NiggerHut(double scale, double posX, double posY) {
+            super(scale, posX, posY);
         }
 
         @Override
         public void interactWith(MicroObject object) { // hut interaction
-            if (!object.isWithinRange(this)) return;
+            if (object.isNotWithinRange(this)) return;
 
             if (object instanceof MicroObject.Slaver slaver) {
-                var hut = world.getHut();
-                slaver.objective = (slaver.objective == hut) ? world.getHut() : hut;
+                var hut = INSTANCE.getHut();
+                slaver.objective = (slaver.objective == hut) ? INSTANCE.getHut() : hut;
                 getNiggersOut(slaver);
             } else {
                 objects.add(object);
-                object.world.removeMicro(object);
+                INSTANCE.removeMicro(object);
             }
         }
 
@@ -120,6 +124,21 @@ abstract public class MacroObject extends ImageView {
         public String getTexture() {
             return "халупа";
         }
+    }
+
+    public Point2D getStartingPos() {
+        return new Point2D(
+                getLayoutX() + getImage().getWidth() / 2 - (30 * (objects.size() - 1)),
+                getLayoutY() + getImage().getHeight()
+        );
+    }
+
+    public double absoluteX() {
+        return Math.abs(INSTANCE.view.getX() - getLayoutX());
+    }
+
+    public double absoluteY() {
+        return Math.abs(INSTANCE.view.getY() - getLayoutY());
     }
 
     @Override
@@ -130,11 +149,44 @@ abstract public class MacroObject extends ImageView {
         return x >= getLayoutX() && x <= getLayoutX() + width && y >= getLayoutY() && y <= getLayoutY() + height;
     }
 
+    public void move(double x, double y) {
+        setLayoutY(getLayoutY() + y);
+        setLayoutX(getLayoutX() + x);
+    }
+
+    public void freeMicro(MicroObject micro, double x, double y) {
+        micro.setLayoutX(x);
+        micro.setLayoutY(y);
+
+        micro.text.setLayoutX(x);
+        micro.text.setLayoutY(y);
+
+        INSTANCE.miniMap.push(micro);
+        INSTANCE.addChildren(micro, micro.text, micro.miniMapVersion);
+    }
+
+    protected void getNiggersOut(MicroObject.Slaver newMaster) {
+        final double[] x = {getStartingPos().getX()};
+        var y = getStartingPos().getY();
+
+        objects.removeIf(object1 -> {
+            if (!(object1 instanceof MicroObject.Nigger nigger)) return false;
+            if (newMaster instanceof MicroObject.Merchant && getClass() != TradeShip.class) return false;
+            System.out.println("aha!");
+            nigger.objective = newMaster.objective;
+            nigger.master = newMaster;
+            newMaster.niggers.add(nigger);
+            freeMicro(nigger, x[0], y);
+            x[0] += newMaster.getImage().getWidth();
+            return true;
+        });
+    }
+
     public ContextMenu menu(double x, double y) {
         return new ContextMenu(
-                   newMicroObject(x, y),
-                   getAllMicrosOut(),
-                   interactWithSelected()
+                newMicroObject(x, y),
+                getAllMicrosOut(),
+                interactWithSelected()
         );
     }
 
@@ -143,23 +195,12 @@ abstract public class MacroObject extends ImageView {
         res.setOnAction(actionEvent -> {
             var toInteract = new ArrayList<MicroObject>();
 
-            for (var micro : world.microObjects)
+            for (var micro : INSTANCE.microObjects)
                 if (micro.isActive) toInteract.add(micro);
 
             toInteract.forEach(this::interactWith);
         });
         return res;
-    }
-
-    protected void freeMicro(MicroObject micro, double x, double y) {
-        micro.setLayoutX(x);
-        micro.setLayoutY(y);
-
-        micro.text.setLayoutX(x);
-        micro.text.setLayoutY(y);
-
-        world.miniMap.push(micro);
-        world.addChildren(micro, micro.text, micro.miniMapVersion);
     }
 
     private MenuItem getAllMicrosOut() {
@@ -181,56 +222,8 @@ abstract public class MacroObject extends ImageView {
     private MenuItem newMicroObject(double x, double y) {
         var res = new MenuItem("New MicroObject here...");
 
-        res.setOnAction(actionEvent -> {
-            var creator = new MicroObjectCreator(x, y);
-            creator.setCreateAction(actionEvent1 -> {
-                var object = creator.makeMicroObject(world);
-                objects.add(object);
-                creator.close();
-            });
-        });
+        res.setOnAction(actionEvent -> MicroObjectCreator.call(x, y, objects::add));
 
         return res;
-    }
-
-    abstract public void interactWith(MicroObject object);
-
-    abstract public String getTexture();
-
-    public Point2D getStartingPos() {
-        return new Point2D(
-                getLayoutX() + getImage().getWidth() / 2 - (30 * (objects.size() - 1)),
-                getLayoutY() + getImage().getHeight()
-        );
-    }
-
-    public void move(double x, double y) {
-        setLayoutY(getLayoutY() + y);
-        setLayoutX(getLayoutX() + x);
-    }
-
-    protected void getNiggersOut(MicroObject.Slaver newMaster) {
-        final double[] x = {getStartingPos().getX()};
-        var y = getStartingPos().getY();
-
-        objects.removeIf(object1 -> {
-            if (!(object1 instanceof MicroObject.Nigger nigger)) return false;
-            if (newMaster instanceof MicroObject.Merchant && getClass() != TradeShip.class) return false;
-            System.out.println("aha!");
-            nigger.objective = newMaster.objective;
-            nigger.master = newMaster;
-            newMaster.niggers.add(nigger);
-            freeMicro(nigger, x[0], y);
-            x[0] += newMaster.getImage().getWidth();
-            return true;
-        });
-    }
-
-    public double absoluteX() {
-        return Math.abs(world.view.getX() - getLayoutX());
-    }
-
-    public double absoluteY() {
-        return Math.abs(world.view.getY() - getLayoutY());
     }
 }
