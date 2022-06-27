@@ -1,52 +1,13 @@
 package com.sirkostya009.termpaper;
 
-import javafx.geometry.Pos;
-import javafx.scene.Node;
-import javafx.scene.control.Button;
 import javafx.scene.image.Image;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
-import javafx.stage.Stage;
 
-import java.io.File;
+import java.io.*;
 import java.nio.file.Paths;
 import java.util.Objects;
 
-public class Utilities {
-    public static final int spacing = 15;
-    public static final Pos alignment = Pos.CENTER;
-    public static final boolean fillWidth = false;
-
-    public static Button genericCreateButton() {
-        var res = new Button("Create");
-        res.setDefaultButton(true);
-        return res;
-    }
-
-    public static Button genericCancelButton( Stage stage) {
-        var res = new Button("Cancel");
-        res.setCancelButton(true);
-        res.setOnAction(actionEvent -> stage.close());
-        return res;
-    }
-
-    public static VBox genericVBox(Node... nodes) {
-        var res = new VBox(nodes);
-        res.setFillWidth(fillWidth);
-        res.setSpacing(spacing);
-        res.setAlignment(alignment);
-        return res;
-    }
-
-    public static HBox genericHBox(Node... nodes) {
-        var res = new HBox(nodes);
-        res.setAlignment(alignment);
-        res.setSpacing(spacing);
-        res.setFillHeight(fillWidth);
-        return res;
-    }
-
+public final class Utilities {
     public static FileChooser genericChooser(String title) {
         var chooser = new FileChooser();
 
@@ -64,4 +25,11 @@ public class Utilities {
         return new Image(Objects.requireNonNull(MacroObject.class.getResourceAsStream(name + ".png")));
     }
 
+    public static <T extends Serializable> T loadState(File file) throws IOException, ClassNotFoundException {
+        return (T) new ObjectInputStream(new FileInputStream(file)).readObject();
+    }
+
+    public static <T extends Serializable> void saveState(File file, T state) throws IOException {
+        new ObjectOutputStream(new FileOutputStream(file)).writeObject(state);
+    }
 }
