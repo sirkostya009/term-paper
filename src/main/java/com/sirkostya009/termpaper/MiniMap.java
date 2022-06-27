@@ -4,44 +4,41 @@ import javafx.scene.image.ImageView;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 
+import static com.sirkostya009.termpaper.World.INSTANCE;
+
 public class MiniMap {
     public final static double divisor = 11;
 
-    public final World parent;
     public final ImageView view;
     public final Rectangle camera;
 
-    public MiniMap(World parent) {
-        this.parent = parent;
+    public MiniMap(final World instance) {
+        view = new ImageView(instance.view.getImage());
 
-        view = new ImageView(parent.view.getImage());
+        view.setFitHeight(view.getImage().getHeight() / divisor);
+        view.setFitWidth(view.getImage().getWidth() / divisor);
 
-        view.setFitHeight(parent.view.getImage().getHeight() / divisor);
-        view.setFitWidth(parent.view.getImage().getWidth() / divisor);
-
-        camera = new Rectangle(parent.getWidth() / divisor, parent.getHeight() / divisor);
+        camera = new Rectangle(instance.getWidth() / divisor, instance.getHeight() / divisor);
         camera.setFill(new Color(1, 1, 1, .3));
 
         view.setOnMouseClicked(mouseEvent -> {
-            var x = (mouseEvent.getSceneX() /
-                    view.getFitWidth() *
-                    parent.view.getImage().getWidth()) -
-                    parent.getWidth() / 2;
+            var sceneWidth = INSTANCE.getWidth();
+            var sceneHeight = INSTANCE.getHeight();
+            var viewWidth = INSTANCE.view.getImage().getWidth();
+            var viewHeight = INSTANCE.view.getImage().getHeight();
 
-            var y = (mouseEvent.getSceneY() /
-                    view.getFitHeight() *
-                    parent.view.getImage().getHeight()) -
-                    parent.getHeight() / 2;
+            var x = (mouseEvent.getSceneX() / view.getFitWidth() * viewWidth) - sceneWidth / 2;
+            var y = (mouseEvent.getSceneY() / view.getFitHeight() * viewHeight) - sceneHeight / 2;
 
-            if (x + parent.getWidth() > parent.view.getImage().getWidth())
-                x = parent.view.getImage().getWidth() - parent.getWidth();
+            if (x + sceneWidth > viewWidth)
+                x = viewWidth - sceneWidth;
             else if (x < 0) x = 0;
 
-            if (y + parent.getHeight() > parent.view.getImage().getHeight())
-                y = parent.view.getImage().getHeight() - parent.getHeight();
+            if (y + sceneHeight > viewHeight)
+                y = viewHeight - sceneHeight;
             else if (y < 0) y = 0;
 
-            parent.setPos(x, y);
+            INSTANCE.setPos(x, y);
 
             x = mouseEvent.getSceneX() - camera.getWidth() / 2;
             y = mouseEvent.getSceneY() - camera.getHeight() / 2;
@@ -58,8 +55,6 @@ public class MiniMap {
         });
 
         camera.setOnMouseClicked(view.getOnMouseClicked());
-
-        parent.addChildren(view, camera);
     }
 
     public void updateCamera(double x, double y) {
@@ -71,16 +66,16 @@ public class MiniMap {
         var object = microObject.clone();
         object.setScaleX(microObject.getScaleX() / (divisor / 2));
         object.setScaleY(microObject.getScaleY() / (divisor / 2));
-        object.setLayoutX((microObject.getLayoutX() - parent.view.getX()) /
-                parent.view.getImage().getWidth() * view.getFitWidth() - object.getImage().getWidth() / 2);
-        object.setLayoutY((microObject.getLayoutY() - parent.view.getY()) /
-                parent.view.getImage().getHeight() * view.getFitHeight() - object.getImage().getHeight() / 2);
+        object.setLayoutX((microObject.getLayoutX() - INSTANCE.view.getX()) /
+                INSTANCE.view.getImage().getWidth() * view.getFitWidth() - object.getImage().getWidth() / 2);
+        object.setLayoutY((microObject.getLayoutY() - INSTANCE.view.getY()) /
+                INSTANCE.view.getImage().getHeight() * view.getFitHeight() - object.getImage().getHeight() / 2);
         microObject.miniMapVersion = object;
     }
 
     public void toFront() {
         view.toFront();
-        parent.microObjects.forEach(micro -> micro.miniMapVersion.toFront());
+        INSTANCE.microObjects.forEach(micro -> micro.miniMapVersion.toFront());
         camera.toFront();
     }
 }
