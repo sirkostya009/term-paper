@@ -10,20 +10,12 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Objects;
 
+import static com.sirkostya009.termpaper.World.INSTANCE;
+
 public abstract class MicroObject extends ImageView implements Cloneable {
     private static final double spacing = 5;
-
-    public enum LEVEL {
-        NIGGER, SLAVER, MERCHANT, TOTAL
-    }
-
-    boolean linedUp = false;
-
-    ArrayList<MicroObject> privateObjects = new ArrayList<>();
-
-    LEVEL level;
-    public static final int speed = 5;
     private static int counter = 0;
+    public static final int SPEED = 5;
 
     protected final int id = counter++;
     public final String name;
@@ -31,63 +23,49 @@ public abstract class MicroObject extends ImageView implements Cloneable {
 
     public final Text text;
 
-    boolean isActive = false;
+    public boolean isActive = false;
 
-    public final World world;
-
-    protected MicroObject miniMapVersion = null;
+    protected MicroObject miniMapVersion = null, captainObj = null;
     protected MacroObject objective = null;
-    protected MicroObject captainObj = null;
 
-    protected boolean captain = false;
-    public void setCaptain(boolean captain) {
-        this.captain = captain;
-    }
+    public final ArrayList<MicroObject> privateObjects = new ArrayList<>();
+    public boolean isCaptain = false, isLinedUp = false;
 
-    public boolean isCaptain() {
-        return captain;
-    }
+    public enum LEVEL { NIGGER, SLAVER, MERCHANT, TOTAL }
+    public final LEVEL level;
 
-    public void moveToCaptain() {
-        if (isCaptain()) return;
-        if (linedUp) return;
+    protected MicroObject(String name, double scale, double x, double y, boolean isActive) {
+        setImage(Utilities.imageFrom(getTexture()));
+        this.name = name;
 
-        if (captainObj == null)
-            world.microObjects.forEach(microObject -> {
-                if (microObject.isCaptain() && microObject.level == level) {
-                    captainObj = microObject;
-                    captainObj.privateObjects.add(this);
-                }
-            });
+        setLayoutX(x);
+        setLayoutY(y);
 
-        double x = 0, y = 0;
+        this.scale = scale;
+        setScaleX(scale);
+        setScaleY(scale);
 
-        if (absoluteY() > captainObj.absoluteY()) y = -speed;
-        if (absoluteY() < captainObj.absoluteY()) y =  speed;
+        text = new Text(this.name);
+        text.setLayoutX(x);
+        text.setLayoutY(y);
 
-        var position = captainObj.privateObjects.indexOf(this) + 1;
-        var destinationX = captainObj.absoluteX() + (captainObj.getImage().getWidth() * position) + (spacing * position);
+        if (isActive) clickAction();
 
-        if (absoluteX() > destinationX) x = -speed;
-        if (absoluteX() < destinationX) x =  speed;
-
-        if (Math.abs(captainObj.absoluteY() - absoluteY()) < 5 && Math.abs(absoluteX() - destinationX) < 5)
-            linedUp = true;
-
-        move(x, y, true);
-        miniMapVersion.move(x / MiniMap.divisor, y / MiniMap.divisor);
+        if (this instanceof Merchant) level = LEVEL.MERCHANT;
+        else if (this instanceof Slaver) level = LEVEL.SLAVER;
+        else if (this instanceof Nigger) level = LEVEL.NIGGER;
+        else level = LEVEL.TOTAL;
     }
 
     public static class Nigger extends MicroObject {
-        Slaver master = null;
+        public Slaver master = null;
 
-        public Nigger(String _name, double scale, double x, double y, boolean isActive, World parent) {
-            super(_name, scale, x, y, isActive, parent);
-            level = LEVEL.NIGGER;
+        public Nigger(String name, double scale, double x, double y, boolean isActive) {
+            super(name, scale, x, y, isActive);
         }
 
         private Nigger(Nigger nigger) {
-            this(nigger.name, nigger.getScaleX(), nigger.getLayoutX(), nigger.getLayoutY(), nigger.isActive, nigger.world);
+            this(nigger.name, nigger.getScaleX(), nigger.getLayoutX(), nigger.getLayoutY(), nigger.isActive);
             master = nigger.master;
         }
 
@@ -99,10 +77,10 @@ public abstract class MicroObject extends ImageView implements Cloneable {
         @Override
         public void doBusiness() {
             if (master == null)
-                objective = (((MacroObject.TradeShip) world.getShip()).localMerchant != null) ? world.getShip() : world.getAuctionHouse();
+                 objective = (INSTANCE.tradeShip.localMerchant != null) ? INSTANCE.tradeShip : INSTANCE.auctionHouse;
             else objective = master.objective;
 
-            goToObjective();
+            moveToObjective();
         }
 
         @Override
@@ -114,14 +92,13 @@ public abstract class MicroObject extends ImageView implements Cloneable {
     public static class Slaver extends Nigger {
         public final ArrayList<Nigger> niggers = new ArrayList<>();
 
-        public Slaver(String _name, double scale, double x, double y, boolean isActive, World parent) {
-            super(_name, scale, x, y, isActive, parent);
+        public Slaver(String name, double scale, double x, double y, boolean isActive) {
+            super(name, scale, x, y, isActive);
             master = this;
-            level = LEVEL.SLAVER;
         }
 
-        private Slaver(Slaver slaver) {
-            this(slaver.name, slaver.getScaleX(), slaver.getLayoutX(), slaver.getLayoutY(), slaver.isActive, slaver.world);
+        private Slaver(MicroObject object) {
+            this(object.name, object.getScaleX(), object.getLayoutX(), object.getLayoutY(), object.isActive);
         }
 
         @Override
@@ -132,26 +109,25 @@ public abstract class MicroObject extends ImageView implements Cloneable {
         @Override
         public void doBusiness() {
             if  (objective == null) if (niggers.isEmpty())
-                 objective = (world.getShip().objects.isEmpty()) ? world.getAuctionHouse() : world.getShip();
-            else objective = world.getHut();
+                 objective = (INSTANCE.tradeShip.objects.isEmpty()) ? INSTANCE.auctionHouse : INSTANCE.tradeShip;
+            else objective = INSTANCE.getHut();
 
-            goToObjective();
+            moveToObjective();
         }
 
         @Override
         public MicroObject clone() {
-            return new Slaver(this);
+            return new Slaver(super.clone());
         }
     }
 
     public static class Merchant extends Slaver {
-        public Merchant(String _name, double scale, double x, double y, boolean isActive, World parent) {
-            super(_name, scale, x, y, isActive, parent);
-            level = LEVEL.MERCHANT;
+        public Merchant(String name, double scale, double x, double y, boolean isActive) {
+            super(name, scale, x, y, isActive);
         }
 
-        private Merchant(Merchant merchant) {
-            this(merchant.name, merchant.getScaleX(), merchant.getLayoutX(), merchant.getLayoutY(), merchant.isActive, merchant.world);
+        private Merchant(MicroObject object) {
+            this(object.name, object.getScaleX(), object.getLayoutX(), object.getLayoutY(), object.isActive);
         }
 
         @Override
@@ -162,34 +138,15 @@ public abstract class MicroObject extends ImageView implements Cloneable {
         @Override
         public void doBusiness() {
             if (objective == null)
-                objective = world.getShip();
+                objective = INSTANCE.tradeShip;
 
-            goToObjective();
+            moveToObjective();
         }
 
         @Override
         public MicroObject clone() {
-            return new Merchant(this);
+            return new Merchant(super.clone());
         }
-    }
-
-    protected MicroObject(String _name, double scale, double x, double y, boolean isActive, World parent) {
-        setImage(Utilities.imageFrom(getTexture()));
-        world = parent;
-        name = _name;
-
-        setLayoutX(x);
-        setLayoutY(y);
-
-        this.scale = scale;
-        setScaleX(scale);
-        setScaleY(scale);
-
-        text = new Text(name);
-        text.setLayoutX(x);
-        text.setLayoutY(y);
-
-        if (isActive) clickAction();
     }
 
     public void clickAction() {
@@ -212,44 +169,73 @@ public abstract class MicroObject extends ImageView implements Cloneable {
 
         switch (code) {
             case W -> {
-                if (-world.view.getY() + y <= 0) return;
+                if (-INSTANCE.view.getY() + y <= 0) return;
 
-                for (var macro : world.macroObjects)
+                for (var macro : INSTANCE.macroObjects)
                     if (macro.contains(x, y) && macro.contains(x + getImage().getWidth(), y)) return;
 
-                move(0, -speed, true);
+                move(0, -SPEED, true);
             }
             case A -> {
-                if (world.view.getX() - x > 0) return;
+                if (INSTANCE.view.getX() - x > 0) return;
 
-                for (var macro : world.macroObjects)
+                for (var macro : INSTANCE.macroObjects)
                     if (macro.contains(x, y) && macro.contains(x, y + getImage().getHeight())) return;
 
-                move(-speed, 0, true);
+                move(-SPEED, 0, true);
             }
             case S -> {
-                if (-world.view.getY() + y + getImage().getHeight() > world.view.getImage().getHeight()) return;
+                if (-INSTANCE.view.getY() + y + getImage().getHeight() > INSTANCE.view.getImage().getHeight()) return;
 
-                for (var macro : world.macroObjects)
+                for (var macro : INSTANCE.macroObjects)
                     if (macro.contains(x + getImage().getWidth(), y + getImage().getHeight())
                      && macro.contains(x, y + getImage().getHeight())) return;
 
-                move(0, speed, true);
+                move(0, SPEED, true);
             }
             case D -> {
-                if (-world.view.getX() + x + getImage().getWidth() > world.view.getImage().getWidth()) return;
+                if (-INSTANCE.view.getX() + x + getImage().getWidth() > INSTANCE.view.getImage().getWidth()) return;
 
-                for (var macro : world.macroObjects)
+                for (var macro : INSTANCE.macroObjects)
                     if (macro.contains(x + getImage().getWidth(), y + getImage().getHeight())
                      && macro.contains(x + getImage().getWidth(), y)) return;
 
-                move(speed, 0, true);
+                move(SPEED, 0, true);
             }
         }
 
         miniMapVersion.move((getLayoutX() - x) / MiniMap.divisor,
                             (getLayoutY() - y) / MiniMap.divisor,
                             true);
+    }
+
+    public void moveToCaptain() {
+        if (isCaptain|| isLinedUp) return;
+
+        if (captainObj == null)
+            INSTANCE.microObjects.forEach(microObject -> {
+                if (microObject.isCaptain && microObject.level == level) {
+                    captainObj = microObject;
+                    captainObj.privateObjects.add(this);
+                }
+            });
+
+        double x = 0, y = 0;
+
+        if (absoluteY() > captainObj.absoluteY()) y = -SPEED;
+        if (absoluteY() < captainObj.absoluteY()) y = SPEED;
+
+        var position = captainObj.privateObjects.indexOf(this) + 1;
+        var destinationX = captainObj.absoluteX() + (captainObj.getImage().getWidth() * position) + (spacing * position);
+
+        if (absoluteX() > destinationX) x = -SPEED;
+        if (absoluteX() < destinationX) x = SPEED;
+
+        if (Math.abs(captainObj.absoluteY() - absoluteY()) < 5 && Math.abs(absoluteX() - destinationX) < 5)
+            isLinedUp = true;
+
+        move(x, y, true);
+        miniMapVersion.move(x / MiniMap.divisor, y / MiniMap.divisor);
     }
 
     private final ArrayList<Image> animationTextures = makeAnimationTextures();
@@ -287,20 +273,7 @@ public abstract class MicroObject extends ImageView implements Cloneable {
         move(x, y);
     }
 
-    public boolean isWithinRange(MacroObject with) {
-        return with.absoluteX() - absoluteX() <= getImage().getWidth()  * 2 &&
-               with.absoluteY() - absoluteY() <= getImage().getHeight() * 2;
-    }
-
-    public double centerX() {
-        return absoluteX() + getImage().getWidth() / 2;
-    }
-
-    public double centerY() {
-        return absoluteY() + getImage().getHeight() / 2;
-    }
-
-    public void goToObjective() {
+    public void moveToObjective() {
         var x = 0.;
         var y = 0.;
         var centerX = centerX();
@@ -318,24 +291,43 @@ public abstract class MicroObject extends ImageView implements Cloneable {
 
         if (x == 0 && y == 0) return;
 
-        if      (x < -speed) x = -speed;
-        else if (x >  speed) x =  speed;
-        if      (y < -speed) y = -speed;
-        else if (y >  speed) y =  speed;
+        if      (x < -SPEED) x = -SPEED;
+        else if (x > SPEED) x = SPEED;
+        if      (y < -SPEED) y = -SPEED;
+        else if (y > SPEED) y = SPEED;
 
         miniMapVersion.move(x / MiniMap.divisor, y / MiniMap.divisor, true);
         move(x, y, true);
     }
 
+    public void nullifyObjective() {
+        objective = null;
+    }
+
+    public boolean isNotWithinRange(MacroObject with) {
+        return !(with.absoluteX() - absoluteX() <= getImage().getWidth()  * 2) ||
+               !(with.absoluteY() - absoluteY() <= getImage().getHeight() * 2);
+    }
+
+    public double centerX() {
+        return absoluteX() + getImage().getWidth() / 2;
+    }
+
+    public double centerY() {
+        return absoluteY() + getImage().getHeight() / 2;
+    }
+
     public double absoluteX() {
-        return Math.abs(world.view.getX() - getLayoutX());
+        return Math.abs(INSTANCE.view.getX() - getLayoutX());
     }
 
     public double absoluteY() {
-        return Math.abs(world.view.getY() - getLayoutY());
+        return Math.abs(INSTANCE.view.getY() - getLayoutY());
     }
 
     abstract public String getTexture();
+
+    abstract public void doBusiness();
 
     @Override
     public boolean contains(double x, double y) {
@@ -357,24 +349,16 @@ public abstract class MicroObject extends ImageView implements Cloneable {
     @Override
     public String toString() {
         return getClass().getSimpleName() +
-                "{id=" + id +
-                ", name='" + name + '\'' +
-                ", scale=" + scale +
-                ", text='" + text.getText() + '\'' +
-                ", isActive=" + isActive +
-                ", destination=" + objective +
-                '}';
+                "{name='" + name +
+                "', scale=" + scale +
+                ", isMini=" + (miniMapVersion != null) +
+                ", objective=" + objective +
+                ", isCaptain=" + isCaptain + '}';
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(id);
-    }
-
-    abstract public void doBusiness();
-
-    public void nullifyObjective() {
-        objective = null;
     }
 
     @Override
@@ -388,23 +372,23 @@ public abstract class MicroObject extends ImageView implements Cloneable {
             Boolean isActive,
             String objective
     ) implements Serializable {
-        public MicroObject convert(World parent) {
-            var x = parent.view.getX() + x();
-            var y = parent.view.getY() + y();
+        public MicroObject convert() {
+            var x = INSTANCE.view.getX() + x();
+            var y = INSTANCE.view.getY() + y();
 
             var result = switch (className) {
-                case "Nigger" -> new Nigger(name, scale, x, y, isActive, parent);
-                case "Slaver" -> new Slaver(name, scale, x, y, isActive, parent);
-                case "Merchant" -> new Merchant(name, scale, x, y, isActive, parent);
+                case "Nigger" -> new Nigger(name, scale, x, y, isActive);
+                case "Slaver" -> new Slaver(name, scale, x, y, isActive);
+                case "Merchant" -> new Merchant(name, scale, x, y, isActive);
                 default -> null;
             };
 
             if (result == null) return null;
 
             result.objective = switch (objective) {
-                case "AuctionHouse" -> parent.getAuctionHouse();
-                case "NiggerHut" -> parent.getHut();
-                case "TradeShip" -> parent.getShip();
+                case "AuctionHouse" -> INSTANCE.auctionHouse;
+                case "NiggerHut" -> INSTANCE.getHut();
+                case "TradeShip" -> INSTANCE.tradeShip;
                 default -> null;
             };
 
