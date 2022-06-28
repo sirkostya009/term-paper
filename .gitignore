@@ -1,3 +1,6 @@
-/target
-/unnamed_state.state
-/out
+target
+unnamed_state.state
+out
+
+.idea
+*.iml

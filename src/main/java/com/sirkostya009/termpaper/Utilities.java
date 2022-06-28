@@ -22,7 +22,7 @@ public final class Utilities {
     }
 
     public static Image imageFrom(String name) {
-        return new Image(Objects.requireNonNull(MacroObject.class.getResourceAsStream(name + ".png")));
+        return new Image(Objects.requireNonNull(Main.class.getResourceAsStream(name + ".png")));
     }
 
     public static <T extends Serializable> T loadState(File file) throws IOException, ClassNotFoundException {

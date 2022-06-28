@@ -25,8 +25,8 @@ public final class World extends Scene { // UNIVERSAL OBJECT
 
     public final ArrayList<MicroObject> microObjects = new ArrayList<>();
     public final AuctionHouse auctionHouse = new AuctionHouse(174,1130);
-    public final NiggerHut hut1 = new NiggerHut(1,138,417);
-    public final NiggerHut hut2 = new NiggerHut(.8,530,13);
+    public final Hut hut1 = new Hut(1,138,417);
+    public final Hut hut2 = new Hut(.8,530,13);
     public final TradeShip tradeShip = new TradeShip(1351,1240);
     public final MacroObject[] macroObjects = new MacroObject[]{auctionHouse, hut1, hut2, tradeShip};
 
