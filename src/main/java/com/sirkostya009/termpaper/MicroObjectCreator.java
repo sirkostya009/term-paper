@@ -12,6 +12,7 @@ import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.ResourceBundle;
 
 public class MicroObjectCreator implements Initializable {
@@ -59,14 +60,13 @@ public class MicroObjectCreator implements Initializable {
 
     public static void call(double x, double y, Handler handler) {
         var loader = new FXMLLoader(MicroObjectCreator.class.getResource("object-creator.fxml"));
-        VBox root = null;
+        VBox root;
         try {
             root = loader.load();
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("Failed to load object-creator.fxml:" + e);
+            return;
         }
-
-        if (root == null) return;
 
         var controller = (MicroObjectCreator) loader.getController();
         controller.x = x;
