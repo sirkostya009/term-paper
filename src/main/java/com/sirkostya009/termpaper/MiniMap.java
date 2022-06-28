@@ -53,8 +53,10 @@ public class MiniMap {
             camera.setLayoutX(x);
             camera.setLayoutY(y);
         });
+        view.setOnMouseDragged(view.getOnMouseClicked());
 
         camera.setOnMouseClicked(view.getOnMouseClicked());
+        camera.setOnMouseDragged(view.getOnMouseClicked());
     }
 
     public void updateCamera(double x, double y) {
@@ -66,10 +68,10 @@ public class MiniMap {
         var object = microObject.clone();
         object.setScaleX(microObject.getScaleX() / (divisor / 2));
         object.setScaleY(microObject.getScaleY() / (divisor / 2));
-        object.setLayoutX((microObject.getLayoutX() - INSTANCE.view.getX()) /
-                INSTANCE.view.getImage().getWidth() * view.getFitWidth() - object.getImage().getWidth() / 2);
-        object.setLayoutY((microObject.getLayoutY() - INSTANCE.view.getY()) /
-                INSTANCE.view.getImage().getHeight() * view.getFitHeight() - object.getImage().getHeight() / 2);
+        object.setLayoutX(microObject.absoluteX() / INSTANCE.view.getImage().getWidth()
+                * view.getFitWidth() - object.getImage().getWidth() / 2);
+        object.setLayoutY(microObject.absoluteY() / INSTANCE.view.getImage().getHeight()
+                * view.getFitHeight() - object.getImage().getHeight() / 2);
         microObject.miniMapVersion = object;
     }
 
