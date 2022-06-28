@@ -161,7 +161,10 @@ abstract public class MacroObject extends ImageView {
         micro.text.setLayoutX(x);
         micro.text.setLayoutY(y);
 
-        INSTANCE.miniMap.push(micro);
+        micro.miniMapVersion.setLayoutX(micro.absoluteX() / INSTANCE.view.getImage().getWidth()
+                * INSTANCE.miniMap.view.getFitWidth() - micro.getImage().getWidth() / 2);
+        micro.miniMapVersion.setLayoutY(micro.absoluteY() / INSTANCE.view.getImage().getHeight()
+                * INSTANCE.miniMap.view.getFitHeight() - micro.getImage().getHeight() / 2);
         INSTANCE.addChildren(micro, micro.text, micro.miniMapVersion);
     }
 
@@ -172,7 +175,6 @@ abstract public class MacroObject extends ImageView {
         objects.removeIf(object1 -> {
             if (!(object1 instanceof MicroObject.Nigger nigger)) return false;
             if (newMaster instanceof MicroObject.Merchant && getClass() != TradeShip.class) return false;
-            System.out.println("aha!");
             nigger.objective = newMaster.objective;
             nigger.master = newMaster;
             newMaster.niggers.add(nigger);
@@ -207,13 +209,14 @@ abstract public class MacroObject extends ImageView {
         var res = new MenuItem("Free all micros");
 
         res.setOnAction(actionEvent -> {
-            var x = getStartingPos().getX();
+            final double[] x = {getStartingPos().getX()};
             var y = getStartingPos().getY();
 
-            for (var micro : objects) {
-                freeMicro(micro, x, y);
-                x += micro.getImage().getWidth();
-            }
+            objects.removeIf(micro -> {
+                freeMicro(micro, x[0], y);
+                x[0] += micro.getImage().getWidth();
+                return true;
+            });
         });
 
         return res;
