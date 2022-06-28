@@ -30,7 +30,7 @@ public final class World extends Scene { // UNIVERSAL OBJECT
     public final TradeShip tradeShip = new TradeShip(1351,1240);
     public final MacroObject[] macroObjects = new MacroObject[]{auctionHouse, hut1, hut2, tradeShip};
 
-    public final ImageView view  = new ImageView(Utilities.imageFrom("універсалич"));
+    public final ImageView  view = new ImageView(Utilities.imageFrom("універсалич"));
     public final MiniMap miniMap = new MiniMap(this);
 
     private World(double width, double height) {
@@ -165,7 +165,7 @@ public final class World extends Scene { // UNIVERSAL OBJECT
         return (firstHut) ? hut1 : hut2;
     }
 
-    public void moveCamera(KeyCode code) {
+    private void moveCamera(KeyCode code) {
         double x = 0, y = 0;
 
         switch (code) {
@@ -182,7 +182,7 @@ public final class World extends Scene { // UNIVERSAL OBJECT
         miniMap.updateCamera(x, y);
     }
 
-    public void actualCameraMove(double x, double y) {
+    private void actualCameraMove(double x, double y) {
         view.setX(view.getX() + x);
         view.setY(view.getY() + y);
 

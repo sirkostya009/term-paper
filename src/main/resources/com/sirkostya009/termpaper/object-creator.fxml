@@ -9,12 +9,12 @@
 <VBox xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
       fx:controller="com.sirkostya009.termpaper.MicroObjectCreator"
-      prefHeight="200.0" prefWidth="300.0"
+      prefHeight="300.0" prefWidth="200.0"
       alignment="CENTER" spacing="15" fillWidth="false">
 
     <TextField fx:id="nameField" promptText="name"/>
     <TextField fx:id="scaleField" promptText="scale"/>
-    <CheckBox fx:id="isActive"/>
+    <CheckBox  fx:id="isActive" text="Is active"/>
     <ChoiceBox fx:id="microObjectLevel"/>
 
     <HBox spacing="15" alignment="CENTER">

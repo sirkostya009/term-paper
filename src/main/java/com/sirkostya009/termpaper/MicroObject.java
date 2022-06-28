@@ -37,17 +37,13 @@ public abstract class MicroObject extends ImageView implements Cloneable {
     protected MicroObject(String name, double scale, double x, double y, boolean isActive) {
         setImage(Utilities.imageFrom(getTexture()));
         this.name = name;
-
-        setLayoutX(x);
-        setLayoutY(y);
-
+        this.text = new Text(name);
         this.scale = scale;
+
         setScaleX(scale);
         setScaleY(scale);
 
-        text = new Text(this.name);
-        text.setLayoutX(x);
-        text.setLayoutY(y);
+        move(x, y);
 
         if (isActive) clickAction();
 

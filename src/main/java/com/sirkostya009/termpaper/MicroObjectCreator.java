@@ -55,7 +55,7 @@ public class MicroObjectCreator implements Initializable {
 
     private double x, y;
     private Handler handler;
-    private Stage stage;
+    private final Stage stage = new Stage();
 
     public static void call(double x, double y, Handler handler) {
         var loader = new FXMLLoader(MicroObjectCreator.class.getResource("object-creator.fxml"));
@@ -73,7 +73,6 @@ public class MicroObjectCreator implements Initializable {
         controller.y = y;
         controller.handler = handler;
 
-        controller.stage = new Stage();
         controller.stage.setScene(new Scene(root));
         controller.stage.setTitle("New MicroObject...");
         controller.stage.setResizable(false);
