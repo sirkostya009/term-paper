@@ -20,10 +20,9 @@ public class CaptainButton extends javafx.scene.control.Button {
     }
 
     private void toggle() {
-        isClicked = !isClicked;
+        decorate(!isClicked);
         if (isClicked) captainCounter++;
         else           captainCounter--;
-        decorate(isClicked);
     }
 
     private void decorate(boolean status) {
