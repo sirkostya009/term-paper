@@ -15,7 +15,7 @@ import java.net.URL;
 import java.util.ResourceBundle;
 
 public class MicroObjectCreator implements Initializable {
-    private static final String nigga = "Негр", slaver = "Рабовласник", merchant = "Работоргівець";
+    private static final String black = "Негр", slaver = "Рабовласник", merchant = "Работоргівець";
 
     @FXML
     private TextField nameField, scaleField;
@@ -33,7 +33,7 @@ public class MicroObjectCreator implements Initializable {
         var active = isActive.isSelected();
 
         handler.handle(switch (microObjectLevel.getValue()) {
-            case nigga -> new MicroObject.Nigger(name, scale, x, y, active);
+            case black -> new MicroObject.Black(name, scale, x, y, active);
             case slaver -> new MicroObject.Slaver(name, scale, x, y, active);
             case merchant -> new MicroObject.Merchant(name, scale, x, y, active);
             default -> null;
@@ -49,8 +49,8 @@ public class MicroObjectCreator implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        microObjectLevel.getItems().addAll(nigga, slaver, merchant);
-        microObjectLevel.setValue(nigga);
+        microObjectLevel.getItems().addAll(black, slaver, merchant);
+        microObjectLevel.setValue(black);
     }
 
     private double x, y;
@@ -78,6 +78,7 @@ public class MicroObjectCreator implements Initializable {
         controller.stage.show();
     }
 
+    @FunctionalInterface
     public interface Handler {
         void handle(MicroObject microObject);
     }

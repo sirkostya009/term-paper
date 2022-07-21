@@ -31,7 +31,7 @@ public abstract class MicroObject extends ImageView implements Cloneable {
     public final ArrayList<MicroObject> privateObjects = new ArrayList<>();
     public boolean isCaptain = false, isLinedUp = false;
 
-    public enum LEVEL { NIGGER, SLAVER, MERCHANT, TOTAL }
+    public enum LEVEL { BLACK, SLAVER, MERCHANT, TOTAL }
     public final LEVEL level;
 
     protected MicroObject(String name, double scale, double x, double y, boolean isActive) {
@@ -49,20 +49,20 @@ public abstract class MicroObject extends ImageView implements Cloneable {
 
         if (this instanceof Merchant) level = LEVEL.MERCHANT;
         else if (this instanceof Slaver) level = LEVEL.SLAVER;
-        else if (this instanceof Nigger) level = LEVEL.NIGGER;
+        else if (this instanceof Black) level = LEVEL.BLACK;
         else level = LEVEL.TOTAL;
     }
 
-    public static class Nigger extends MicroObject {
+    public static class Black extends MicroObject {
         public Slaver master = null;
 
-        public Nigger(String name, double scale, double x, double y, boolean isActive) {
+        public Black(String name, double scale, double x, double y, boolean isActive) {
             super(name, scale, x, y, isActive);
         }
 
-        private Nigger(Nigger nigger) {
-            this(nigger.name, nigger.getScaleX(), nigger.getLayoutX(), nigger.getLayoutY(), nigger.isActive);
-            master = nigger.master;
+        private Black(Black black) {
+            this(black.name, black.getScaleX(), black.getLayoutX(), black.getLayoutY(), black.isActive);
+            master = black.master;
         }
 
         @Override
@@ -81,12 +81,12 @@ public abstract class MicroObject extends ImageView implements Cloneable {
 
         @Override
         public MicroObject clone() {
-            return new Nigger(this);
+            return new Black(this);
         }
     }
 
-    public static class Slaver extends Nigger {
-        public final ArrayList<Nigger> niggers = new ArrayList<>();
+    public static class Slaver extends Black {
+        public final ArrayList<Black> blacks = new ArrayList<>();
 
         public Slaver(String name, double scale, double x, double y, boolean isActive) {
             super(name, scale, x, y, isActive);
@@ -104,7 +104,7 @@ public abstract class MicroObject extends ImageView implements Cloneable {
 
         @Override
         public void doBusiness() {
-            if  (objective == null) if (niggers.isEmpty())
+            if  (objective == null) if (blacks.isEmpty())
                  objective = (INSTANCE.tradeShip.objects.isEmpty()) ? INSTANCE.auctionHouse : INSTANCE.tradeShip;
             else objective = INSTANCE.getHut();
 
@@ -373,7 +373,7 @@ public abstract class MicroObject extends ImageView implements Cloneable {
             var y = INSTANCE.view.getY() + y();
 
             var result = switch (className) {
-                case "Nigger" -> new Nigger(name, scale, x, y, isActive);
+                case "Black" -> new Black(name, scale, x, y, isActive);
                 case "Slaver" -> new Slaver(name, scale, x, y, isActive);
                 case "Merchant" -> new Merchant(name, scale, x, y, isActive);
                 default -> null;
@@ -383,7 +383,7 @@ public abstract class MicroObject extends ImageView implements Cloneable {
 
             result.objective = switch (objective) {
                 case "AuctionHouse" -> INSTANCE.auctionHouse;
-                case "NiggerHut" -> INSTANCE.getHut();
+                case "Hut" -> INSTANCE.getHut();
                 case "TradeShip" -> INSTANCE.tradeShip;
                 default -> null;
             };

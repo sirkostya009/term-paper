@@ -49,11 +49,11 @@ abstract public class MacroObject extends ImageView {
             if (object instanceof MicroObject.Slaver slaver) {
                 if (objects.isEmpty()) return;
                 slaver.objective = (slaver instanceof MicroObject.Merchant) ? INSTANCE.tradeShip : INSTANCE.getHut();
-                getNiggersOut(slaver);
-            } else if (object instanceof MicroObject.Nigger nigger) {
-                objects.add(nigger);
-                INSTANCE.removeMicro(nigger);
-                nigger.objective = null;
+                freeSlaves(slaver);
+            } else if (object instanceof MicroObject.Black black) {
+                objects.add(black);
+                INSTANCE.removeMicro(black);
+                black.objective = null;
             }
         }
 
@@ -78,15 +78,15 @@ abstract public class MacroObject extends ImageView {
                 localMerchant = merchant;
                 if (objects.isEmpty()) return;
                 merchant.objective = INSTANCE.auctionHouse;
-                getNiggersOut(merchant);
+                freeSlaves(merchant);
                 localMerchant = null;
             } else if (object instanceof MicroObject.Slaver slaver) {
                 if (objects.isEmpty()) return;
                 slaver.objective = INSTANCE.getHut();
-                getNiggersOut(slaver);
-            } else if (object instanceof MicroObject.Nigger nigger) {
-                objects.add(nigger);
-                INSTANCE.removeMicro(nigger);
+                freeSlaves(slaver);
+            } else if (object instanceof MicroObject.Black black) {
+                objects.add(black);
+                INSTANCE.removeMicro(black);
             }
         }
 
@@ -101,8 +101,8 @@ abstract public class MacroObject extends ImageView {
         }
     }
 
-    public static class NiggerHut extends MacroObject {
-        public NiggerHut(double scale, double posX, double posY) {
+    public static class Hut extends MacroObject {
+        public Hut(double scale, double posX, double posY) {
             super(scale, posX, posY);
         }
 
@@ -113,7 +113,7 @@ abstract public class MacroObject extends ImageView {
             if (object instanceof MicroObject.Slaver slaver) {
                 var hut = INSTANCE.getHut();
                 slaver.objective = (slaver.objective == hut) ? INSTANCE.getHut() : hut;
-                getNiggersOut(slaver);
+                freeSlaves(slaver);
             } else {
                 objects.add(object);
                 INSTANCE.removeMicro(object);
@@ -168,17 +168,17 @@ abstract public class MacroObject extends ImageView {
         INSTANCE.addChildren(micro, micro.text, micro.miniMapVersion);
     }
 
-    protected void getNiggersOut(MicroObject.Slaver newMaster) {
+    protected void freeSlaves(MicroObject.Slaver newMaster) {
         final double[] x = {getStartingPos().getX()};
         var y = getStartingPos().getY();
 
         objects.removeIf(object1 -> {
-            if (!(object1 instanceof MicroObject.Nigger nigger)) return false;
+            if (!(object1 instanceof MicroObject.Black black)) return false;
             if (newMaster instanceof MicroObject.Merchant && getClass() != TradeShip.class) return false;
-            nigger.objective = newMaster.objective;
-            nigger.master = newMaster;
-            newMaster.niggers.add(nigger);
-            freeMicro(nigger, x[0], y);
+            black.objective = newMaster.objective;
+            black.master = newMaster;
+            newMaster.blacks.add(black);
+            freeMicro(black, x[0], y);
             x[0] += newMaster.getImage().getWidth();
             return true;
         });
